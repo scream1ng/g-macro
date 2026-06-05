@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G-Macro Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #d0d0d0;
+  --bg2:    #c0c0c0;
+  --bg3:    #b4b4b4;
+  --panel:  #d8d8d8;
+  --border: #888;
+  --bd2:    #666;
+  --hot:    #000;
+  --dim:    #999;
+  --text:   #111;
+  --text2:  #444;
+  --text3:  #777;
+  --green:  #2a6;
+  --warn:   #a60;
+  --px:     'Press Start 2P', monospace;
+  --vt:     'VT323', monospace;
+  --sw:     240px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);
+  background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px);
+  background-size:8px 8px;
+  color:var(--text);font-family:var(--vt);font-size:18px;
+  height:100vh;overflow:hidden;image-rendering:pixelated;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.025) 3px,rgba(0,0,0,.025) 4px);
+}
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sw);min-width:var(--sw);background:var(--bg3);
+  border-right:2px solid var(--border);display:flex;flex-direction:column;overflow:hidden;
+}
+.sb-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 12px;background:var(--bg2);border-bottom:2px solid var(--border);flex-shrink:0;
+}
+.sb-title{font-family:var(--px);font-size:8px;letter-spacing:2px;color:var(--hot);}
+.icon-btn{
+  background:var(--bg);border:2px solid var(--bd2);color:var(--hot);
+  font-family:var(--px);font-size:11px;width:24px;height:24px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.icon-btn:hover{background:var(--hot);color:var(--bg);}
+.profile-list{flex:1;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:4px;}
+.p-card{
+  background:var(--bg2);border:2px solid var(--border);
+  padding:7px 9px;cursor:pointer;display:flex;gap:8px;align-items:flex-start;
+}
+.p-card:hover{background:var(--panel);}
+.p-card.active{background:var(--hot);border-color:var(--hot);color:var(--bg);}
+.p-icon{font-size:26px;line-height:1;flex-shrink:0;width:30px;text-align:center;}
+.p-name{font-family:var(--px);font-size:8px;letter-spacing:1px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.p-meta{font-family:var(--vt);font-size:15px;line-height:1.4;color:var(--text2);}
+.p-card.active .p-meta{color:rgba(255,255,255,.7);}
+.p-card.active .p-name{color:var(--bg);}
+.btn-new-p{
+  margin:6px;padding:7px;background:none;border:2px dashed var(--border);
+  color:var(--text2);font-family:var(--vt);font-size:16px;letter-spacing:1px;
+  cursor:pointer;width:calc(100% - 12px);flex-shrink:0;
+}
+.btn-new-p:hover{border-color:var(--hot);color:var(--hot);}
+.p-summary{border-top:2px solid var(--border);padding:9px 12px;flex-shrink:0;background:var(--bg2);}
+.p-sum-title{font-family:var(--px);font-size:8px;letter-spacing:1px;color:var(--hot);margin-bottom:7px;}
+.sum-row{display:flex;justify-content:space-between;font-family:var(--vt);font-size:15px;color:var(--text2);margin-bottom:2px;}
+.sum-val{color:var(--text);}
+
+/* ── MAIN ── */
+.main-col{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 14px;background:var(--bg2);border-bottom:2px solid var(--border);flex-shrink:0;
+}
+.logo-wrap{display:flex;align-items:center;gap:10px;}
+.logo-g{
+  width:36px;height:36px;background:var(--hot);color:var(--bg);
+  font-family:var(--px);font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.logo-title{font-family:var(--px);font-size:10px;letter-spacing:2px;color:var(--hot);}
+.logo-sub{font-family:var(--vt);font-size:13px;color:var(--text2);letter-spacing:2px;}
+.hdr-btns{display:flex;gap:5px;align-items:center;}
+
+/* ── BUTTONS ── */
+.btn{
+  font-family:var(--px);font-size:8px;letter-spacing:1px;
+  padding:7px 13px;border:2px solid var(--bd2);background:var(--bg);color:var(--text);cursor:pointer;
+}
+.btn:hover{background:var(--bg3);}
+.btn-primary{background:var(--hot);color:var(--bg);border-color:var(--hot);}
+.btn-primary:hover{background:#333;}
+
+/* ── SECTIONS ── */
+.sections{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.sec{background:var(--panel);border:2px solid var(--border);}
+.sec-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;background:var(--bg3);border-bottom:2px solid var(--border);
+}
+.sec-title{font-family:var(--px);font-size:9px;letter-spacing:2px;color:var(--hot);}
+.sec-body{padding:14px;}
+.help-btn{
+  background:var(--bg2);border:2px solid var(--border);color:var(--text2);
+  font-family:var(--px);font-size:8px;width:20px;height:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ── FIELD ── */
+.f-lbl{font-family:var(--vt);font-size:15px;letter-spacing:1px;color:var(--text2);margin-bottom:7px;display:block;text-transform:uppercase;}
+.f-hint{font-family:var(--vt);font-size:15px;color:var(--text3);margin-top:6px;line-height:1.4;}
+.f-grid{display:grid;gap:10px 16px;}
+
+select,input[type=text],input[type=number]{
+  background:var(--bg);border:2px solid var(--bd2);color:var(--text);
+  font-family:var(--vt);font-size:18px;padding:4px 7px;outline:none;
+  appearance:none;-webkit-appearance:none;
+}
+select:focus,input:focus{border-color:var(--hot);}
+
+/* custom select wrapper */
+.sel-w{position:relative;display:inline-flex;align-items:stretch;}
+.sel-w select{padding-right:26px;width:100%;}
+.sel-arr{
+  position:absolute;right:0;top:0;bottom:0;width:22px;
+  background:var(--bg2);border-left:2px solid var(--bd2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;color:var(--text2);pointer-events:none;
+}
+
+/* spinbox */
+.spinbox{display:inline-flex;flex-direction:column;}
+.spinbox input{border-bottom:none;text-align:center;width:100%;}
+.sp-btns{display:flex;flex-direction:column;}
+.sp-btn{
+  background:var(--bg2);border:2px solid var(--bd2);border-top:1px solid var(--bd2);
+  color:var(--text);font-size:8px;cursor:pointer;text-align:center;
+  line-height:13px;height:13px;user-select:none;
+}
+.sp-btn:first-child{border-top:2px solid var(--bd2);}
+.sp-btn:hover{background:var(--bg3);}
+
+/* slider */
+.sl-wrap{display:flex;align-items:center;gap:9px;}
+.sl-val{font-family:var(--vt);font-size:20px;color:var(--hot);min-width:36px;}
+input[type=range]{
+  -webkit-appearance:none;width:100%;max-width:160px;height:12px;
+  background:var(--bg);border:2px solid var(--bd2);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;background:var(--hot);cursor:pointer;
+}
+
+/* radio */
+.radio-grp{display:flex;flex-direction:column;gap:7px;}
+.r-row{display:flex;align-items:center;gap:7px;cursor:pointer;}
+.r-row input[type=radio]{
+  -webkit-appearance:none;appearance:none;
+  width:13px;height:13px;border:2px solid var(--bd2);background:var(--bg);
+  cursor:pointer;flex-shrink:0;position:relative;
+}
+.r-row input[type=radio]:checked{background:var(--hot);border-color:var(--hot);}
+.r-row input[type=radio]:checked::after{
+  content:'';position:absolute;inset:2px;background:var(--bg);
+}
+.r-lbl{font-family:var(--vt);font-size:18px;cursor:pointer;}
+
+/* movement grid — wraps on narrow viewports */
+.move-grid{
+  display:flex;flex-wrap:wrap;gap:12px 16px;
+}
+.move-grid>div{min-width:110px;}
+
+/* direction grid */
+.dir-grid{
+  display:grid;grid-template-columns:repeat(3,34px);
+  grid-template-rows:repeat(3,34px);gap:2px;
+}
+.dir-btn{
+  background:var(--bg2);border:2px solid var(--border);color:var(--text2);
+  font-family:var(--vt);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;letter-spacing:0;
+}
+.dir-btn.active{background:var(--hot);color:var(--bg);border-color:var(--hot);}
+.dir-btn:hover:not(.active){background:var(--bg3);}
+.dir-center{background:none;border:none;cursor:default;}
+
+/* weight bar */
+.wbar-wrap{display:flex;flex-direction:column;gap:6px;}
+.w-row{display:flex;align-items:center;gap:7px;}
+.w-lbl{font-family:var(--vt);font-size:16px;color:var(--text2);min-width:58px;}
+.wbar-track{
+  width:110px;height:13px;background:var(--bg2);border:2px solid var(--bd2);
+  display:flex;gap:1px;padding:1px;cursor:pointer;
+}
+.wbar-cell{flex:1;background:transparent;}
+.wbar-cell.on{background:var(--hot);}
+.w-num{font-family:var(--px);font-size:7px;color:var(--hot);min-width:14px;}
+
+/* toggle switch */
+.toggle{position:relative;width:32px;height:17px;flex-shrink:0;cursor:pointer;}
+.toggle input{display:none;}
+.tgl-track{
+  position:absolute;inset:0;background:var(--bg2);border:2px solid var(--bd2);
+  transition:background .1s;
+}
+.toggle input:checked~.tgl-track{background:var(--hot);border-color:var(--hot);}
+.tgl-thumb{
+  position:absolute;top:2px;left:2px;width:9px;height:9px;
+  background:var(--bg);transition:transform .1s;
+}
+.toggle input:checked~.tgl-track .tgl-thumb{transform:translateX(15px);}
+
+/* divider */
+.div{border:none;border-top:1px solid var(--border);margin:9px 0;}
+
+/* ── ROTATION ── */
+.rot-panels{display:grid;grid-template-columns:1fr 1fr 220px;gap:10px;}
+.rot-panel{border:2px solid var(--border);background:var(--bg);}
+.rot-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 11px;background:var(--bg2);border-bottom:2px solid var(--border);
+}
+.rot-title{font-family:var(--px);font-size:8px;letter-spacing:1px;color:var(--hot);}
+.rot-body{padding:10px;min-height:80px;}
+.rot-body.collapsed{display:none;}
+.collapse-btn{background:none;border:none;font-family:var(--px);font-size:9px;color:var(--text2);cursor:pointer;}
+
+/* seq rows */
+.seq-row{
+  display:grid;grid-template-columns:15px 22px 1fr auto auto;
+  gap:5px;align-items:center;padding:5px 6px;
+  border:1px solid var(--border);margin-bottom:4px;
+  background:var(--panel);
+}
+.drag-handle{color:var(--text3);font-size:13px;cursor:grab;text-align:center;}
+.icon-slot{width:20px;height:20px;flex-shrink:0;}
+.seq-key-sel{
+  background:var(--bg);border:2px solid var(--bd2);color:var(--hot);
+  font-family:var(--vt);font-size:16px;padding:2px 4px;
+  outline:none;width:100%;appearance:none;-webkit-appearance:none;
+}
+.seq-ms{
+  width:68px;font-family:var(--vt);font-size:16px;color:var(--text);
+  background:var(--bg);border:2px solid var(--bd2);padding:2px 5px;
+  outline:none;text-align:right;
+}
+.del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0 2px;}
+.del-btn:hover{color:var(--hot);}
+.btn-add{
+  background:none;border:2px dashed var(--border);color:var(--text2);
+  font-family:var(--vt);font-size:16px;letter-spacing:1px;padding:5px;
+  cursor:pointer;width:100%;margin-top:5px;
+}
+.btn-add:hover{border-color:var(--hot);color:var(--hot);}
+.ms-sfx{font-family:var(--vt);font-size:15px;color:var(--text3);white-space:nowrap;}
+
+/* notes */
+.notes-panel{border:2px solid var(--border);background:var(--bg);padding:12px;}
+.notes-title{font-family:var(--px);font-size:8px;color:var(--hot);letter-spacing:1px;margin-bottom:9px;}
+.notes-text{font-family:var(--vt);font-size:16px;color:var(--text2);line-height:1.6;}
+
+/* ── TIMERS ── */
+.timers-wrap{display:grid;grid-template-columns:1fr 220px;gap:10px;}
+.t-hdrs{
+  display:grid;grid-template-columns:42px 1fr 86px 76px 40px 20px;
+  gap:3px;padding:0 3px;margin-bottom:4px;
+}
+.t-hdr{font-family:var(--vt);font-size:15px;letter-spacing:1px;color:var(--text2);text-transform:uppercase;}
+.t-row{
+  display:grid;grid-template-columns:42px 1fr 86px 76px 40px 20px;
+  gap:5px;align-items:center;padding:5px 6px;
+  border:1px solid var(--border);margin-bottom:4px;background:var(--panel);
+}
+.t-key{
+  background:var(--bg);border:2px solid var(--bd2);color:var(--hot);
+  font-family:var(--px);font-size:8px;text-align:center;
+  padding:4px 2px;width:100%;outline:none;appearance:none;-webkit-appearance:none;
+}
+.t-name{
+  background:transparent;border:none;border-bottom:1px solid var(--border);
+  color:var(--text);font-family:var(--vt);font-size:16px;
+  padding:2px 4px;outline:none;width:100%;
+}
+.t-name:focus{border-bottom-color:var(--hot);}
+.t-every{
+  background:var(--bg);border:2px solid var(--bd2);color:var(--text);
+  font-family:var(--vt);font-size:15px;padding:2px 5px;
+  outline:none;width:100%;appearance:none;-webkit-appearance:none;
+}
+
+/* ── TIMELINE ── */
+.tl-wrap{display:grid;grid-template-columns:1fr 220px;gap:10px;}
+.tl-scale{position:relative;height:15px;margin-bottom:3px;}
+.tl-tick{position:absolute;top:0;font-family:var(--vt);font-size:15px;color:var(--text3);}
+.tl-bar{
+  position:relative;height:34px;background:var(--bg);
+  border:2px solid var(--bd2);overflow:hidden;margin-bottom:5px;
+}
+.tl-timers{position:relative;height:22px;margin-bottom:8px;}
+.tl-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.stat-box{background:var(--bg);border:2px solid var(--border);padding:10px;}
+.stat-lbl{font-family:var(--vt);font-size:15px;color:var(--text2);letter-spacing:1px;margin-bottom:2px;text-transform:uppercase;}
+.stat-val{font-family:var(--px);font-size:11px;color:var(--hot);}
+.conflicts{border:2px solid var(--border);background:var(--bg);padding:9px;}
+.conf-title{font-family:var(--px);font-size:8px;color:var(--hot);letter-spacing:1px;margin-bottom:7px;}
+.conf-item{font-family:var(--vt);font-size:15px;margin-bottom:3px;display:flex;gap:5px;}
+.c-ok{color:var(--green);}
+.c-warn{color:var(--warn);}
+
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+  background:var(--hot);color:var(--bg);
+  font-family:var(--px);font-size:8px;letter-spacing:2px;
+  padding:9px 18px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:10000;
+}
+#toast.show{opacity:1;}
+
+/* ── MODAL ── */
+.modal-bd{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+  z-index:10000;align-items:center;justify-content:center;
+}
+.modal-bd.open{display:flex;}
+.modal{
+  background:var(--panel);border:3px solid var(--hot);
+  width:90%;max-width:600px;max-height:90vh;overflow-y:auto;
+}
+.modal-hdr{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 14px;background:var(--bg3);border-bottom:2px solid var(--hot);
+}
+.modal-title{font-family:var(--px);font-size:9px;color:var(--hot);letter-spacing:2px;}
+.modal-body{padding:14px;}
+
+/* scrollbar */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--border);}
+
+/* seq dragging */
+.seq-row.dragging{opacity:.45;}
+.seq-row.drag-over{outline:2px dashed var(--hot);}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="sb-hdr">
+    <span class="sb-title">PROFILES</span>
+    <button class="icon-btn" onclick="newProfile()">+</button>
+  </div>
+  <div class="profile-list" id="profile-list"></div>
+  <button class="btn-new-p" onclick="newProfile()">+ NEW PROFILE</button>
+  <div class="p-summary">
+    <div class="p-sum-title">PROFILE SUMMARY</div>
+    <div class="sum-row"><span>Loop Time</span><span class="sum-val" id="sum-loop">—</span></div>
+    <div class="sum-row"><span>Total Actions</span><span class="sum-val" id="sum-actions">—</span></div>
+    <div class="sum-row"><span>Timers</span><span class="sum-val" id="sum-timers">—</span></div>
+    <div class="sum-row"><span>Mode</span><span class="sum-val" id="sum-mode">—</span></div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN COLUMN ═══ -->
+<div class="main-col">
+  <header>
+    <div class="logo-wrap">
+      <div class="logo-g">G</div>
+      <div>
+        <div class="logo-title">G-MACRO TOOL</div>
+        <div class="logo-sub">BUILD YOUR MACROS. YOUR WAY.</div>
+      </div>
+    </div>
+    <div class="hdr-btns">
+      <button class="btn" onclick="loadLua()">LOAD</button>
+      <button class="btn" onclick="saveLua()">SAVE</button>
+      <button class="btn" onclick="saveAsLua()">SAVE AS</button>
+    </div>
+  </header>
+
+  <div class="sections">
+
+    <!-- 1. CORE SETTINGS -->
+    <div class="sec">
+      <div class="sec-hdr">
+        <span class="sec-title">⚙ 1. CORE SETTINGS</span>
+        <button class="help-btn">?</button>
+      </div>
+      <div class="sec-body">
+        <div class="f-grid" style="grid-template-columns:155px 155px 155px 1fr;">
+          <div>
+            <label class="f-lbl">TRIGGER BUTTON</label>
+            <div class="sel-w" style="width:100%;">
+              <select id="triggerButton" style="width:100%;">
+                <option value="1">1 — Left Click</option>
+                <option value="2">2 — Right Click</option>
+                <option value="3">3 — Middle</option>
+                <option value="4">4 — Side Back</option>
+                <option value="5">5 — Side Fwd</option>
+                <option value="6">6</option><option value="7">7</option>
+                <option value="8">8</option><option value="9" selected>9</option>
+                <option value="10">10</option><option value="11">11</option>
+              </select>
+              <span class="sel-arr">▼</span>
+            </div>
+            <div class="f-hint">Key that starts<br>the macro.</div>
+          </div>
+          <div>
+            <label class="f-lbl">RUNTIME LIMIT (SEC)</label>
+            <div class="spinbox" style="width:100%;">
+              <input type="number" id="maxRuntime" value="0" min="0" step="1" style="width:100%;">
+              <div class="sp-btns">
+                <button class="sp-btn" onclick="spin('maxRuntime',1)">▲</button>
+                <button class="sp-btn" onclick="spin('maxRuntime',-1)">▼</button>
+              </div>
+            </div>
+            <div class="f-hint">0 = No time limit.</div>
+          </div>
+          <div>
+            <label class="f-lbl">LOOP LIMIT</label>
+            <div class="spinbox" style="width:100%;">
+              <input type="number" id="maxLoops" value="0" min="0" step="1" style="width:100%;">
+              <div class="sp-btns">
+                <button class="sp-btn" onclick="spin('maxLoops',1)">▲</button>
+                <button class="sp-btn" onclick="spin('maxLoops',-1)">▼</button>
+              </div>
+            </div>
+            <div class="f-hint">0 = Infinite loops.</div>
+          </div>
+          <div>
+            <label class="f-lbl">HUMANIZATION (JITTER)</label>
+            <div class="sl-wrap">
+              <span class="sl-val" id="jitterVal">15%</span>
+              <input type="range" id="jitterPct" min="0" max="50" value="15"
+                oninput="document.getElementById('jitterVal').textContent=this.value+'%'">
+            </div>
+            <div class="f-hint">Adds random delay<br>between actions.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MOVEMENT -->
+    <div class="sec">
+      <div class="sec-hdr">
+        <span class="sec-title">✂ 2. MOVEMENT</span>
+        <button class="help-btn">?</button>
+      </div>
+      <div class="sec-body">
+        <div class="move-grid">
+          <div>
+            <label class="f-lbl">MODE</label>
+            <div class="radio-grp">
+              <label class="r-row">
+                <input type="radio" name="moveMode" id="mm-keyboard" value="keyboard" checked onchange="updateMoveMode()">
+                <span class="r-lbl">Keyboard</span>
+              </label>
+              <label class="r-row">
+                <input type="radio" name="moveMode" id="mm-mouse" value="mouse" onchange="updateMoveMode()">
+                <span class="r-lbl">Mouse</span>
+              </label>
+              <label class="r-row">
+                <input type="radio" name="moveMode" id="mm-off" value="off" onchange="updateMoveMode()">
+                <span class="r-lbl">Off</span>
+              </label>
+            </div>
+          </div>
+          <!-- keyboard+mouse fields — hidden when Off -->
+          <div id="move-kb-fields" style="display:contents;">
+          <div>
+            <label class="f-lbl">DURATION (MS)</label>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <input type="number" id="walkMin" value="1500" min="100" step="100" style="width:68px;text-align:center;">
+              <span style="font-family:var(--px);font-size:8px;color:var(--text2);">-</span>
+              <input type="number" id="walkMax" value="2500" min="100" step="100" style="width:68px;text-align:center;">
+            </div>
+            <div class="f-hint">Movement duration range.</div>
+          </div>
+          <div>
+            <label class="f-lbl">DIRECTION CHANGE (MS)</label>
+            <div class="spinbox">
+              <input type="number" id="walkChange" value="600" min="100" step="100">
+              <div class="sp-btns">
+                <button class="sp-btn" onclick="spin('walkChange',100)">▲</button>
+                <button class="sp-btn" onclick="spin('walkChange',-100)">▼</button>
+              </div>
+            </div>
+            <div class="f-hint">How often to change<br>direction.</div>
+          </div>
+          <div>
+            <label class="f-lbl">DIRECTIONS</label>
+            <div class="dir-grid">
+              <button class="dir-btn active" id="dir-wa" onclick="toggleDir('wa')">WA</button>
+              <button class="dir-btn active" id="dir-w"  onclick="toggleDir('w')">W</button>
+              <button class="dir-btn active" id="dir-wd" onclick="toggleDir('wd')">WD</button>
+              <button class="dir-btn active" id="dir-a"  onclick="toggleDir('a')">A</button>
+              <div class="dir-center"></div>
+              <button class="dir-btn active" id="dir-d"  onclick="toggleDir('d')">D</button>
+              <button class="dir-btn active" id="dir-sa" onclick="toggleDir('sa')">SA</button>
+              <button class="dir-btn active" id="dir-s"  onclick="toggleDir('s')">S</button>
+              <button class="dir-btn active" id="dir-sd" onclick="toggleDir('sd')">SD</button>
+            </div>
+          </div>
+          <div>
+            <label class="f-lbl">DIRECTION WEIGHTS</label>
+            <div class="wbar-wrap">
+              <div class="w-row">
+                <span class="w-lbl">Cardinal</span>
+                <div class="wbar-track" id="wbar-cardinal" onclick="clickWbar('cardinal',event)"></div>
+                <span class="w-num" id="wnum-cardinal">2</span>
+                <input type="hidden" id="weightCardinal" value="2">
+              </div>
+              <div class="w-row">
+                <span class="w-lbl">Diagonal</span>
+                <div class="wbar-track" id="wbar-diagonal" onclick="clickWbar('diagonal',event)"></div>
+                <span class="w-num" id="wnum-diagonal">1</span>
+                <input type="hidden" id="weightDiagonal" value="1">
+              </div>
+            </div>
+          </div>
+          </div><!-- /#move-kb-fields -->
+        </div>
+        <!-- Mouse move options -->
+        <div id="mouse-move-opts" style="display:none;margin-top:10px;">
+          <hr class="div">
+          <div class="f-grid" style="grid-template-columns:170px 170px 170px;gap:0 14px;">
+            <div>
+              <label class="f-lbl">CLICK AREA (%)</label>
+              <input type="number" id="mouseClickArea" value="40" min="10" max="100" style="width:100%;">
+            </div>
+            <div>
+              <label class="f-lbl">ARRIVAL WAIT (MS)</label>
+              <input type="number" id="mouseArrivalWait" value="1800" min="200" step="100" style="width:100%;">
+            </div>
+            <div>
+              <label class="f-lbl">CLICKS PER CYCLE</label>
+              <input type="number" id="mouseClickCount" value="2" min="1" max="10" style="width:100%;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. ROTATION -->
+    <div class="sec">
+      <div class="sec-hdr">
+        <span class="sec-title">&#x1F5A5; 3. ROTATION (SKILLS)</span>
+        <button class="help-btn">?</button>
+      </div>
+      <div class="sec-body" style="padding:8px;">
+        <div class="rot-panels">
+          <div class="rot-panel">
+            <div class="rot-hdr"><span class="rot-title">MAIN ROTATION</span></div>
+            <div class="rot-body">
+              <div id="seq-list"></div>
+              <button class="btn-add" onclick="addSeqRow()">+ ADD ACTION</button>
+            </div>
+          </div>
+          <div class="rot-panel">
+            <div class="rot-hdr">
+              <span class="rot-title">+ MOUSE TARGET SKILLS</span>
+              <button class="collapse-btn" id="ms-collapse-btn" onclick="toggleMsPanel()">∧</button>
+            </div>
+            <div class="rot-body" id="ms-panel-body">
+              <div id="mouse-skill-list"></div>
+              <button class="btn-add" onclick="addMouseSkillRow()">+ ADD ACTION</button>
+            </div>
+          </div>
+          <div class="notes-panel">
+            <div class="notes-title">NOTES</div>
+            <div class="notes-text">
+              Rotation runs in order from top to bottom.<br><br>
+              Delays are added between each action.<br><br>
+              The last action will loop back to the first.
+            </div>
+          </div>
+        </div>
+        <!-- hidden sequence options -->
+        <div style="display:none;">
+          <select id="seqMode"><option value="after" selected>after</option><option value="during">during</option></select>
+          <input type="number" id="seqCooldown" value="500">
+          <input type="number" id="mouseSkillArea" value="50">
+          <input type="number" id="screenW2" value="2560">
+          <input type="number" id="screenH2" value="1440">
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. TIMERS -->
+    <div class="sec">
+      <div class="sec-hdr">
+        <span class="sec-title">&#x23F2; 4. TIMERS (BUFFS / COOLDOWNS)</span>
+        <button class="help-btn">?</button>
+      </div>
+      <div class="sec-body" style="padding:8px;">
+        <div class="timers-wrap">
+          <div>
+            <div class="t-hdrs">
+              <span class="t-hdr">KEY</span>
+              <span class="t-hdr">ACTION / SKILL</span>
+              <span class="t-hdr">EVERY</span>
+              <span class="t-hdr">OFFSET</span>
+              <span class="t-hdr">ENABLED</span>
+              <span></span>
+            </div>
+            <div id="buff-list"></div>
+            <button class="btn-add" onclick="addBuffRow()" style="margin-top:5px;">+ ADD TIMER</button>
+          </div>
+          <div class="notes-panel">
+            <div class="notes-title">NOTES</div>
+            <div class="notes-text">
+              Timers run independently of the main rotation. They will trigger when the time is reached.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. PREVIEW TIMELINE -->
+    <div class="sec">
+      <div class="sec-hdr"><span class="sec-title">5. PREVIEW TIMELINE</span></div>
+      <div class="sec-body" style="padding:8px;">
+        <div class="tl-wrap">
+          <div>
+            <div class="tl-scale" id="tl-scale"></div>
+            <div class="tl-timers" id="tl-timers"></div>
+            <div class="tl-bar" id="tl-bar"></div>
+            <div class="tl-stats">
+              <div class="stat-box">
+                <div class="stat-lbl">ESTIMATED LOOP TIME</div>
+                <div class="stat-val" id="stat-loop">—</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-lbl">ACTIONS PER LOOP</div>
+                <div class="stat-val" id="stat-acts">—</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-lbl">TIMERS ACTIVE</div>
+                <div class="stat-val" id="stat-tmrs">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="conflicts">
+            <div class="conf-title">- CONFLICTS / WARNINGS</div>
+            <div id="conf-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. G HUB LOADER -->
+    <div class="sec">
+      <div class="sec-hdr">
+        <span class="sec-title">6. G HUB LOADER</span>
+        <button class="help-btn">?</button>
+      </div>
+      <div class="sec-body" style="padding:8px 10px;">
+        <div style="font-family:var(--vt);font-size:15px;color:#666;margin-bottom:8px;">PASTE ONCE IN G HUB — SAVE UPDATES .LUA AUTOMATICALLY.</div>
+        <label style="font-family:var(--vt);font-size:14px;color:#888;display:block;margin-bottom:3px;">MACRO DIRECTORY PATH:</label>
+        <input type="text" id="loader-path-input" oninput="updateLoaderInline()" placeholder="C:\MacroTool\" style="width:100%;font-family:var(--vt);font-size:16px;padding:5px 9px;background:#eee;border:2px solid #888;color:#222;box-sizing:border-box;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#ddd;border:2px solid #888;padding:5px 9px;margin-bottom:4px;">
+          <span id="loader-fn-display" style="font-family:var(--vt);font-size:15px;color:#888;">— save a .lua file first —</span>
+          <button class="btn" onclick="copyLoaderInline()" style="font-size:7px;padding:5px 9px;">[COPY]</button>
+        </div>
+        <pre id="loader-inline-out" style="background:#222;border:2px solid #888;color:#aaa;font-family:'Courier New',monospace;font-size:12px;padding:11px;overflow-x:auto;white-space:pre;line-height:1.5;">-- save a .lua file to generate loader code</pre>
+      </div>
+    </div>
+
+  </div><!-- /.sections -->
+</div><!-- /.main-col -->
+</div><!-- /.app -->
+
+<input type="file" id="file-input" accept=".lua" style="display:none;" onchange="onFileLoad(event)">
+<div id="toast"></div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────
+const VALID_KEYS = ['1','2','3','4','5','6','7','8','9','0',
+                    'q','e','r','t','y','u','i','o','p','['];
+const MOUSE_BTNS = ['LMB','RMB','MMB'];
+const EVERY_OPTS  = [5,10,15,20,30,45,60,90,120,180,300];
+const OFFSET_OPTS = [0,1,2,3,5,10,15,20,30];
+const COLORS = ['#c84','#48c','#a44','#4a4','#88c','#ca4','#4ca','#c48','#84c','#ac4'];
+const P_ICONS = ['🌾','⚔','🏠','⛏','🎣','🗡','🏹','🛡','✨','💀'];
+const MAX_W = 10;
+
+// ── PROFILES ──────────────────────────────────
+let profiles = [];
+let activeIdx = 0;
+
+function mkProfile(name, icon) {
+  return {
+    name, icon: icon || '🌾',
+    triggerButton:9, maxRuntime:0, maxLoops:0, jitterPct:15,
+    walk:{ mode:'keyboard', min:1500, max:2500, changeInterval:600,
+           dirs:{w:true,a:true,s:true,d:true,wa:true,wd:true,sa:true,sd:true},
+           weightCardinal:2, weightDiagonal:1,
+           mouseClickArea:40, mouseArrivalWait:1800, mouseClickCount:2 },
+    mouse:{ enabled:false, recenter:false, area:50, screenW:2560, screenH:1440 },
+    sequence:{ mode:'after', cooldown:500, rows:[] },
+    mouseSkills:[], buffs:[],
+  };
+}
+
+function seqMs(rows) {
+  let ms = 0;
+  (rows||[]).forEach(r => {
+    if (VALID_KEYS.includes(r.action)) ms += (r.delay||0) + (r.hold||50);
+    else if (r.action==='wait') ms += (r.delay||0);
+  });
+  return ms;
+}
+
+function loopMs(p) {
+  const walkAvg = ((p.walk?.min||1500) + (p.walk?.max||2500)) / 2;
+  return Math.round(walkAvg + seqMs(p.sequence?.rows));
+}
+
+function profSummary(p) {
+  const acts   = p.sequence?.rows?.length || 0;
+  const timers = (p.buffs||[]).filter(b=>b.enabled!==false).length;
+  const ms     = loopMs(p);
+  const loop   = ms > 0 ? (ms/1000).toFixed(1)+'s' : '—';
+  const mode   = p.walk?.mode==='mouse' ? 'Mouse Move' : 'Keyboard Move';
+  return {acts, timers, loop, mode};
+}
+
+function renderProfiles() {
+  const el = document.getElementById('profile-list');
+  el.innerHTML = '';
+  profiles.forEach((p,i) => {
+    const s = profSummary(p);
+    const c = document.createElement('div');
+    c.className = 'p-card' + (i===activeIdx?' active':'');
+    c.innerHTML = `<div class="p-icon">${p.icon||'🌾'}</div>
+      <div style="min-width:0;">
+        <div class="p-name">${p.name}</div>
+        <div class="p-meta">${s.acts} Skills<br>${s.timers} Buff${s.timers!==1?'s':''}<br>Loop ${s.loop}<br>${s.mode}</div>
+      </div>`;
+    c.onclick = () => switchProfile(i);
+    el.appendChild(c);
+  });
+}
+
+function switchProfile(i) {
+  saveCurrentProfile();
+  activeIdx = i;
+  applyConfig(profiles[i]);
+  renderProfiles();
+}
+
+function saveCurrentProfile() {
+  if (profiles[activeIdx]) profiles[activeIdx] = {...profiles[activeIdx], ...getConfig()};
+}
+
+function newProfile() {
+  saveCurrentProfile();
+  const name = prompt('Profile name:','NEW PROFILE');
+  if (!name) return;
+  const icon = P_ICONS[profiles.length % P_ICONS.length];
+  profiles.push(mkProfile(name.toUpperCase(), icon));
+  activeIdx = profiles.length - 1;
+  applyConfig(profiles[activeIdx]);
+  renderProfiles();
+  saveProfiles();
+}
+
+function saveProfiles() {
+  saveCurrentProfile();
+  localStorage.setItem('gmacro-profiles', JSON.stringify(profiles));
+}
+
+function loadProfiles() {
+  try {
+    const d = localStorage.getItem('gmacro-profiles');
+    if (d) profiles = JSON.parse(d);
+  } catch(e){}
+  if (!profiles.length) profiles = [mkProfile('AFK FARM','🌾')];
+  renderProfiles();
+  applyConfig(profiles[activeIdx]);
+}
+
+function updateSummary() {
+  const cfg = getConfig();
+  const ms  = loopMs(cfg);
+  document.getElementById('sum-loop').textContent    = ms>0?(ms/1000).toFixed(1)+'s':'—';
+  document.getElementById('sum-actions').textContent = cfg.sequence.rows.length;
+  document.getElementById('sum-timers').textContent  = cfg.buffs.filter(b=>b.enabled!==false).length;
+  document.getElementById('sum-mode').textContent    = cfg.walk.mode==='mouse'?'Mouse Move':'Keyboard Move';
+}
+
+// ── HELPERS ──────────────────────────────────
+function spin(id, d) {
+  const el = document.getElementById(id);
+  const mn = +(el.min??-Infinity), st = +(el.step||1);
+  el.value = Math.max(mn, +el.value + d*st);
+}
+
+// ── DIRECTION ─────────────────────────────────
+const dirState = {w:true,a:true,s:true,d:true,wa:true,wd:true,sa:true,sd:true};
+function toggleDir(d) {
+  dirState[d] = !dirState[d];
+  document.getElementById('dir-'+d).classList.toggle('active', dirState[d]);
+}
+
+// ── WEIGHT BAR ────────────────────────────────
+function renderWbar(name, val) {
+  const tr = document.getElementById('wbar-'+name); if (!tr) return;
+  tr.innerHTML = '';
+  for (let i=0;i<MAX_W;i++) {
+    const c=document.createElement('div');
+    c.className='wbar-cell'+(i<val?' on':'');
+    tr.appendChild(c);
+  }
+}
+function clickWbar(name, e) {
+  const tr = document.getElementById('wbar-'+name);
+  const pct = (e.clientX - tr.getBoundingClientRect().left) / tr.offsetWidth;
+  const val = Math.max(1, Math.round(pct * MAX_W));
+  const cap = name.charAt(0).toUpperCase()+name.slice(1);
+  document.getElementById('weight'+cap).value = val;
+  document.getElementById('wnum-'+name).textContent = val;
+  renderWbar(name, val);
+}
+
+// ── MOVE MODE ─────────────────────────────────
+function updateMoveMode() {
+  const mode = getMoveMode();
+  const isOff = mode === 'off';
+  const isMouse = mode === 'mouse';
+  document.getElementById('move-kb-fields').style.display = isOff ? 'none' : 'contents';
+  document.getElementById('mouse-move-opts').style.display = isMouse ? '' : 'none';
+  updateSummary();
+}
+
+// ── MOUSE SKILL COLLAPSE ──────────────────────
+let msCollapsed = false;
+function toggleMsPanel() {
+  msCollapsed = !msCollapsed;
+  document.getElementById('ms-panel-body').classList.toggle('collapsed', msCollapsed);
+  document.getElementById('ms-collapse-btn').textContent = msCollapsed?'∨':'∧';
+}
+
+// ── SEQUENCE ROWS ─────────────────────────────
+let seqRows = [], seqDrag = null;
+
+function addSeqRow(data) {
+  seqRows.push(data||{action:'q',delay:300,hold:50,repeat:1});
+  renderSeqList(); updateTimeline(); updateSummary();
+}
+function removeSeqRow(i) {
+  seqRows.splice(i,1); renderSeqList(); updateTimeline(); updateSummary();
+}
+
+function buildActionOpts(val) {
+  const kOpts = VALID_KEYS.map(k=>`<option value="${k}"${val===k?' selected':''}>${k.toUpperCase()}</option>`).join('');
+  return kOpts +
+    `<option value="wait"${val==='wait'?' selected':''}>WAIT</option>` +
+    `<option value="mouse_skill"${val==='mouse_skill'?' selected':''}>MOUSE SKILL</option>` +
+    `<option value="mouse_drift"${val==='mouse_drift'?' selected':''}>CURSOR DRIFT</option>` +
+    `<option value="recenter"${val==='recenter'?' selected':''}>RECENTER</option>`;
+}
+
+function renderSeqList() {
+  const list = document.getElementById('seq-list');
+  list.innerHTML = '';
+  seqRows.forEach((row,i) => {
+    const isKey  = VALID_KEYS.includes(row.action);
+    const isWait = row.action==='wait';
+    const hasMs  = isKey||isWait||row.action==='mouse_skill';
+    const wrap   = document.createElement('div');
+    wrap.className = 'seq-row'; wrap.draggable = true;
+    wrap.innerHTML = `
+      <span class="drag-handle">⠿</span>
+      <div class="icon-slot" style="background:${COLORS[i%COLORS.length]};"></div>
+      <select class="seq-key-sel">${buildActionOpts(row.action)}</select>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <input type="number" class="seq-ms" value="${row.delay||0}" min="0" step="50"
+          ${!hasMs?'disabled style="opacity:.3;"':''}
+          onchange="seqRows[${i}].delay=+this.value;updateTimeline();">
+        <span class="ms-sfx">ms</span>
+      </div>
+      <button class="del-btn" onclick="removeSeqRow(${i})">&#x2715;</button>`;
+    wrap.addEventListener('dragstart',()=>{seqDrag=i;wrap.classList.add('dragging');});
+    wrap.addEventListener('dragend',()=>{wrap.classList.remove('dragging');seqDrag=null;renderSeqList();});
+    wrap.addEventListener('dragover',e=>{e.preventDefault();wrap.classList.add('drag-over');});
+    wrap.addEventListener('dragleave',()=>wrap.classList.remove('drag-over'));
+    wrap.addEventListener('drop',e=>{
+      e.preventDefault();wrap.classList.remove('drag-over');
+      if(seqDrag!==null&&seqDrag!==i){
+        seqRows.splice(i,0,seqRows.splice(seqDrag,1)[0]);
+        renderSeqList();updateTimeline();
+      }
+    });
+    const sel = wrap.querySelector('select');
+    sel.value = row.action;
+    sel.addEventListener('change',function(){
+      seqRows[i].action=this.value;
+      if(this.value==='mouse_skill'&&!seqRows[i].skillKey)seqRows[i].skillKey='q';
+      renderSeqList();updateTimeline();
+    });
+    list.appendChild(wrap);
+  });
+}
+
+// ── BUFF ROWS ─────────────────────────────────
+let buffRows = [];
+
+function addBuffRow(data) {
+  buffRows.push(data||{key:'8',name:'Buff Skill',interval:15,offset:0,preLockout:2,postDelay:500,enabled:true});
+  renderBuffList(); updateTimeline(); updateSummary();
+}
+function removeBuffRow(i) {
+  buffRows.splice(i,1); renderBuffList(); updateTimeline(); updateSummary();
+}
+
+function renderBuffList() {
+  const list = document.getElementById('buff-list');
+  list.innerHTML = '';
+  buffRows.forEach((row,i) => {
+    const kOpts = VALID_KEYS.map(k=>`<option value="${k}"${row.key===k?' selected':''}>${k.toUpperCase()}</option>`).join('');
+    const eOpts = EVERY_OPTS.map(s=>`<option value="${s}"${row.interval===s?' selected':''}>${s} sec</option>`).join('');
+    const oOpts = OFFSET_OPTS.map(s=>`<option value="${s}"${(row.offset||0)===s?' selected':''}>${s} sec</option>`).join('');
+    const div   = document.createElement('div');
+    div.className = 't-row';
+    div.innerHTML = `
+      <select class="t-key" onchange="buffRows[${i}].key=this.value;">${kOpts}</select>
+      <div style="display:flex;align-items:center;gap:5px;">
+        <div style="width:16px;height:16px;background:${COLORS[i%COLORS.length]};flex-shrink:0;"></div>
+        <input class="t-name" type="text" value="${row.name||'Buff Skill'}" onchange="buffRows[${i}].name=this.value;">
+      </div>
+      <select class="t-every" onchange="buffRows[${i}].interval=+this.value;updateTimeline();">${eOpts}</select>
+      <select class="t-every" onchange="buffRows[${i}].offset=+this.value;updateTimeline();">${oOpts}</select>
+      <label class="toggle">
+        <input type="checkbox" ${row.enabled!==false?'checked':''}
+          onchange="buffRows[${i}].enabled=this.checked;updateTimeline();updateSummary();">
+        <div class="tgl-track"><div class="tgl-thumb"></div></div>
+      </label>
+      <button class="del-btn" onclick="removeBuffRow(${i})">&#x2715;</button>`;
+    list.appendChild(div);
+  });
+}
+
+// ── MOUSE SKILL ROWS ──────────────────────────
+let mouseSkillRows = [];
+
+function addMouseSkillRow(data) {
+  mouseSkillRows.push(data||{key:'LMB',delay:300,repeat:1});
+  renderMsList(); updateTimeline();
+}
+function removeMouseSkillRow(i) {
+  mouseSkillRows.splice(i,1); renderMsList(); updateTimeline();
+}
+
+function renderMsList() {
+  const list = document.getElementById('mouse-skill-list');
+  list.innerHTML = '';
+  mouseSkillRows.forEach((row,i) => {
+    const opts = [...VALID_KEYS,...MOUSE_BTNS].map(k=>
+      `<option value="${k}"${row.key===k?' selected':''}>${k.toUpperCase()}</option>`).join('');
+    const div = document.createElement('div');
+    div.className = 'seq-row';
+    div.innerHTML = `
+      <span class="drag-handle">⠿</span>
+      <div class="icon-slot" style="background:${COLORS[(i+5)%COLORS.length]};"></div>
+      <select class="seq-key-sel" onchange="mouseSkillRows[${i}].key=this.value;">${opts}</select>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <input type="number" class="seq-ms" value="${row.delay||300}" min="0" step="50"
+          onchange="mouseSkillRows[${i}].delay=+this.value;updateTimeline();">
+        <span class="ms-sfx">ms</span>
+      </div>
+      <button class="del-btn" onclick="removeMouseSkillRow(${i})">&#x2715;</button>`;
+    list.appendChild(div);
+  });
+}
+
+// ── TIMELINE ──────────────────────────────────
+const TL_SECS = 10;
+const ACT_COLORS = ['#d4843a','#3a8cd4','#d43a3a','#3ab43a','#8c3ad4','#d4c83a','#3ad4c8','#d43ac8'];
+
+function updateTimeline() {
+  const cfg    = getConfig();
+  const wAvg   = (cfg.walk.min + cfg.walk.max) / 2;
+  const sMs    = seqMs(cfg.sequence.rows);
+  const total  = TL_SECS * 1000;
+
+  // bar
+  const bar = document.getElementById('tl-bar');
+  bar.innerHTML = '';
+  let elapsed = 0;
+
+  // walk block (gray)
+  const wEl = document.createElement('div');
+  wEl.style.cssText=`position:absolute;left:0;width:${Math.min(wAvg/total*100,100)}%;top:0;bottom:0;background:#888;opacity:.25;`;
+  bar.appendChild(wEl);
+  elapsed = wAvg;
+
+  // sequence blocks
+  cfg.sequence.rows.forEach((row,i) => {
+    const isKey  = VALID_KEYS.includes(row.action);
+    const isWait = row.action==='wait';
+    if (!isKey && !isWait) return;
+    const ms = (row.delay||0) + (isKey?(row.hold||50):0);
+    if (elapsed >= total) return;
+    const left = Math.min(elapsed/total*100,100);
+    const w    = Math.min(ms/total*100, 100-left);
+    const el   = document.createElement('div');
+    el.style.cssText=`position:absolute;left:${left}%;width:${w}%;top:0;bottom:0;background:${ACT_COLORS[i%ACT_COLORS.length]};`;
+    el.title=(isKey?row.action.toUpperCase():'WAIT')+' '+ms+'ms';
+    if (w>2.5) {
+      const lbl=document.createElement('span');
+      lbl.style.cssText=`font-family:'VT323',monospace;font-size:14px;color:#fff;position:absolute;left:2px;top:50%;transform:translateY(-50%);overflow:hidden;max-width:calc(100% - 4px);white-space:nowrap;`;
+      lbl.textContent=isKey?row.action.toUpperCase():'WAIT';
+      el.appendChild(lbl);
+    }
+    bar.appendChild(el);
+    elapsed += ms;
+  });
+
+  // scale
+  const sc = document.getElementById('tl-scale');
+  sc.innerHTML='';
+  for(let s=0;s<=TL_SECS;s+=2){
+    const t=document.createElement('span');
+    t.className='tl-tick';t.textContent=s+'s';
+    t.style.left=(s/TL_SECS*100)+'%';
+    sc.appendChild(t);
+  }
+
+  // timer markers
+  const tr = document.getElementById('tl-timers');
+  tr.innerHTML='';
+  cfg.buffs.forEach((b,i) => {
+    if(b.enabled===false) return;
+    const iMs = (b.interval||15)*1000;
+    const oMs = (b.offset||0)*1000;
+    for(let t=oMs;t<total;t+=iMs){
+      const m=document.createElement('div');
+      m.style.cssText=`position:absolute;left:calc(${t/total*100}% - 9px);width:18px;height:18px;background:${ACT_COLORS[(i+3)%ACT_COLORS.length]};display:flex;align-items:center;justify-content:center;`;
+      m.innerHTML=`<span style="font-family:'VT323',monospace;font-size:15px;color:#fff;">${b.key.toUpperCase()}</span>`;
+      tr.appendChild(m);
+    }
+  });
+
+  // stats
+  const lMs = wAvg + sMs;
+  document.getElementById('stat-loop').textContent = (lMs/1000).toFixed(1)+' sec';
+  document.getElementById('stat-acts').textContent = cfg.sequence.rows.length;
+  document.getElementById('stat-tmrs').textContent = cfg.buffs.filter(b=>b.enabled!==false).length;
+
+  renderConflicts(cfg, lMs);
+  updateSummary();
+}
+
+function renderConflicts(cfg, lMs) {
+  const el = document.getElementById('conf-list');
+  el.innerHTML='';
+  const issues=[];
+  if(!cfg.sequence.rows.length) issues.push({w:true,msg:'No rotation actions configured.'});
+  cfg.buffs.forEach(b=>{
+    if(b.enabled===false) return;
+    if((b.interval||15)*1000 < lMs)
+      issues.push({w:true,msg:`Timer ${b.key.toUpperCase()} interval < loop time.`});
+  });
+  if(!issues.length){
+    el.innerHTML='<div class="conf-item c-ok">&#x2713; No conflicts detected.</div>';
+  } else {
+    issues.forEach(iss=>{
+      const d=document.createElement('div');
+      d.className='conf-item '+(iss.w?'c-warn':'c-ok');
+      d.textContent=(iss.w?'⚠ ':'✓ ')+iss.msg;
+      el.appendChild(d);
+    });
+  }
+}
+
+// ── GET / APPLY CONFIG ────────────────────────
+function getMoveMode(){
+  const off=document.getElementById('mm-off');
+  if(off&&off.checked) return 'off';
+  const kbd=document.getElementById('mm-keyboard');
+  return (kbd&&kbd.checked)?'keyboard':'mouse';
+}
+
+function getConfig() {
+  return {
+    name:  profiles[activeIdx]?.name||'MACRO',
+    icon:  profiles[activeIdx]?.icon||'🌾',
+    triggerButton: +document.getElementById('triggerButton').value,
+    maxRuntime:    +document.getElementById('maxRuntime').value,
+    maxLoops:      +document.getElementById('maxLoops').value,
+    jitterPct:     +document.getElementById('jitterPct').value,
+    walk:{
+      mode:            getMoveMode(),
+      min:             +document.getElementById('walkMin').value,
+      max:             +document.getElementById('walkMax').value,
+      changeInterval:  +document.getElementById('walkChange').value,
+      dirs:            {...dirState},
+      weightCardinal:  +document.getElementById('weightCardinal').value,
+      weightDiagonal:  +document.getElementById('weightDiagonal').value,
+      mouseClickArea:  +document.getElementById('mouseClickArea').value,
+      mouseArrivalWait:+document.getElementById('mouseArrivalWait').value,
+      mouseClickCount: +document.getElementById('mouseClickCount').value,
+    },
+    mouse:{
+      enabled:false,recenter:false,
+      area:   +document.getElementById('mouseSkillArea').value,
+      screenW:+document.getElementById('screenW2').value,
+      screenH:+document.getElementById('screenH2').value,
+    },
+    sequence:{
+      mode:    document.getElementById('seqMode').value,
+      cooldown:+document.getElementById('seqCooldown').value,
+      rows:    JSON.parse(JSON.stringify(seqRows)),
+    },
+    mouseSkills: JSON.parse(JSON.stringify(mouseSkillRows)),
+    buffs:       JSON.parse(JSON.stringify(buffRows)),
+  };
+}
+
+function applyConfig(cfg) {
+  if (!cfg) return;
+  if (cfg.triggerButton!==undefined) document.getElementById('triggerButton').value = cfg.triggerButton;
+  if (cfg.maxRuntime!==undefined)    document.getElementById('maxRuntime').value    = cfg.maxRuntime;
+  if (cfg.maxLoops!==undefined)      document.getElementById('maxLoops').value      = cfg.maxLoops;
+  if (cfg.jitterPct!==undefined){
+    document.getElementById('jitterPct').value=cfg.jitterPct;
+    document.getElementById('jitterVal').textContent=cfg.jitterPct+'%';
+  }
+  if (cfg.walk){
+    const w=cfg.walk;
+    if (w.mode){
+      const kEl=document.getElementById('mm-keyboard');
+      const mEl=document.getElementById('mm-mouse');
+      const oEl=document.getElementById('mm-off');
+      if(kEl) kEl.checked = w.mode==='keyboard';
+      if(mEl) mEl.checked = w.mode==='mouse';
+      if(oEl) oEl.checked = w.mode==='off';
+      updateMoveMode();
+    }
+    if (w.min!==undefined)              document.getElementById('walkMin').value          = w.min;
+    if (w.max!==undefined)              document.getElementById('walkMax').value          = w.max;
+    if (w.changeInterval!==undefined)   document.getElementById('walkChange').value       = w.changeInterval;
+    if (w.weightCardinal!==undefined){
+      document.getElementById('weightCardinal').value=w.weightCardinal;
+      document.getElementById('wnum-cardinal').textContent=w.weightCardinal;
+      renderWbar('cardinal',w.weightCardinal);
+    }
+    if (w.weightDiagonal!==undefined){
+      document.getElementById('weightDiagonal').value=w.weightDiagonal;
+      document.getElementById('wnum-diagonal').textContent=w.weightDiagonal;
+      renderWbar('diagonal',w.weightDiagonal);
+    }
+    if (w.mouseClickArea!==undefined)   document.getElementById('mouseClickArea').value   = w.mouseClickArea;
+    if (w.mouseArrivalWait!==undefined) document.getElementById('mouseArrivalWait').value = w.mouseArrivalWait;
+    if (w.mouseClickCount!==undefined)  document.getElementById('mouseClickCount').value  = w.mouseClickCount;
+    if (w.dirs){
+      Object.assign(dirState,w.dirs);
+      Object.keys(dirState).forEach(k=>{
+        const b=document.getElementById('dir-'+k);
+        if(b) b.classList.toggle('active',dirState[k]);
+      });
+    }
+  }
+  if (cfg.mouse){
+    if (cfg.mouse.area!==undefined)    document.getElementById('mouseSkillArea').value = cfg.mouse.area;
+    if (cfg.mouse.screenW!==undefined) document.getElementById('screenW2').value       = cfg.mouse.screenW;
+    if (cfg.mouse.screenH!==undefined) document.getElementById('screenH2').value       = cfg.mouse.screenH;
+  }
+  if (cfg.sequence){
+    document.getElementById('seqMode').value    = cfg.sequence.mode||'after';
+    document.getElementById('seqCooldown').value= cfg.sequence.cooldown||500;
+    seqRows = cfg.sequence.rows||[];
+    renderSeqList();
+  }
+  if (cfg.mouseSkills){ mouseSkillRows=cfg.mouseSkills; renderMsList(); }
+  if (cfg.buffs){ buffRows=cfg.buffs; renderBuffList(); }
+  updateTimeline();
+  updateSummary();
+}
+
+// ── SAVE / LOAD ───────────────────────────────
+let luaHandle = null;
+
+async function saveLua() {
+  if (!luaHandle){ await saveAsLua(); return; }
+  const code = generateLua();
+  try {
+    const w=await luaHandle.createWritable();
+    await w.write(code);
+    await w.close();
+    setLoaderFile(luaHandle.name||'macro.lua');
+    showToast('SAVED'); saveProfiles();
+  } catch(e){ if(e.name!=='AbortError'){luaHandle=null;showToast('SAVE FAILED');} }
+}
+
+async function saveAsLua() {
+  const code = generateLua();
+  const fn   = (profiles[activeIdx]?.name||'macro').toLowerCase().replace(/\s+/g,'-')+'.lua';
+  if (window.showSaveFilePicker){
+    try {
+      luaHandle = await window.showSaveFilePicker({
+        suggestedName:fn,
+        types:[{description:'Lua Script',accept:{'text/plain':['.lua']}}],
+      });
+      const w=await luaHandle.createWritable();
+      await w.write(code); await w.close();
+      setLoaderFile(luaHandle.name||fn);
+      showToast('SAVED AS'); saveProfiles();
+    } catch(e){ if(e.name!=='AbortError'){luaHandle=null;showToast('SAVE FAILED');} }
+  } else {
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([code],{type:'text/plain'}));
+    a.download=fn; a.click();
+    setLoaderFile(fn); showToast('DOWNLOADED');
+  }
+}
+
+function loadLua(){ document.getElementById('file-input').click(); }
+
+function onFileLoad(e) {
+  const file=e.target.files[0]; if(!file) return;
+  luaHandle=null;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try {
+      const cfg=parseLuaConfig(ev.target.result);
+      if(cfg){applyConfig(cfg);showToast('CONFIG LOADED');}
+      else showToast('ERROR: COULD NOT PARSE');
+    } catch{ showToast('ERROR: INVALID FILE'); }
+  };
+  r.readAsText(file); e.target.value='';
+}
+
+function parseLuaConfig(lua) {
+  const cfg={
+    triggerButton:9,maxRuntime:0,maxLoops:0,jitterPct:15,
+    walk:{mode:'keyboard',min:1500,max:2500,changeInterval:600,
+          dirs:{w:true,a:true,s:true,d:true,wa:true,wd:true,sa:true,sd:true},
+          weightCardinal:2,weightDiagonal:1,
+          mouseClickArea:40,mouseArrivalWait:1800,mouseClickCount:2},
+    mouse:{enabled:false,recenter:false,area:50,screenW:2560,screenH:1440},
+    sequence:{mode:'after',cooldown:500,rows:[]},
+    mouseSkills:[],buffs:[],
+  };
+  const num=(k)=>{const m=lua.match(new RegExp(k+'\\s*=\\s*([\\d.]+)'));return m?+m[1]:null;};
+  const str=(k)=>{const m=lua.match(new RegExp(k+'\\s*=\\s*"([^"]+)"'));return m?m[1]:null;};
+  const bool=(k)=>{const m=lua.match(new RegExp(k+'\\s*=\\s*(true|false)'));return m?m[1]==='true':null;};
+  if(num('triggerButton')!==null)     cfg.triggerButton         = num('triggerButton');
+  if(num('maxRuntime')!==null)        cfg.maxRuntime            = Math.round(num('maxRuntime')/1000);
+  if(num('maxLoops')!==null)          cfg.maxLoops              = num('maxLoops');
+  if(num('jitter')!==null)            cfg.jitterPct             = Math.round(num('jitter')*100);
+  if(str('walkMode')!==null)          cfg.walk.mode             = str('walkMode');
+  if(bool('sequenceDuringWalk')!==null) cfg.sequence.mode       = bool('sequenceDuringWalk')?'during':'after';
+  if(num('sequenceCooldown')!==null)  cfg.sequence.cooldown     = num('sequenceCooldown');
+  if(num('cursorAreaPct')!==null)     cfg.mouse.area            = Math.round(num('cursorAreaPct')*100);
+  if(num('screenWidth')!==null)       cfg.mouse.screenW         = num('screenWidth');
+  if(num('screenHeight')!==null)      cfg.mouse.screenH         = num('screenHeight');
+  if(num('mouseClickAreaPct')!==null) cfg.walk.mouseClickArea   = Math.round(num('mouseClickAreaPct')*100);
+  if(num('mouseArrivalWait')!==null)  cfg.walk.mouseArrivalWait = num('mouseArrivalWait');
+  if(num('mouseClickCount')!==null)   cfg.walk.mouseClickCount  = num('mouseClickCount');
+  const wMin=lua.match(/minDuration\s*=\s*(\d+)/);    if(wMin) cfg.walk.min=+wMin[1];
+  const wMax=lua.match(/maxDuration\s*=\s*(\d+)/);    if(wMax) cfg.walk.max=+wMax[1];
+  const wChg=lua.match(/changeInterval\s*=\s*(\d+)/); if(wChg) cfg.walk.changeInterval=+wChg[1];
+  const dirs={w:false,a:false,s:false,d:false,wa:false,wd:false,sa:false,sd:false};
+  const dRe=/keys=\{([^}]+)\}/g; let dm;
+  while((dm=dRe.exec(lua))!==null){
+    const k=dm[1].replace(/"/g,'').split(',').map(s=>s.trim()).join('');
+    if(dirs[k]!==undefined) dirs[k]=true;
+  }
+  if(Object.values(dirs).some(Boolean)) cfg.walk.dirs=dirs;
+  const sBlock=lua.match(/^sequence\s*=\s*\{([\s\S]*?)\n\}/m);
+  if(sBlock){
+    const rRe=/\{action="([^"]+)"([^}]*)\}/g; let rm;
+    while((rm=rRe.exec(sBlock[1]))!==null){
+      const action=rm[1],rest=rm[2];
+      const rN=(k)=>{const m=rest.match(new RegExp(k+'=(\\d+)'));return m?+m[1]:null;};
+      const rS=(k)=>{const m=rest.match(new RegExp(k+'="([^"]+)"'));return m?m[1]:null;};
+      if(action==='key') cfg.sequence.rows.push({action:rS('key'),delay:rN('delay')||0,hold:rN('hold')||50,repeat:rN('times')||1});
+      else cfg.sequence.rows.push({action,delay:rN('delay')||0});
+    }
+  }
+  const msBlock=lua.match(/^mouseSkills\s*=\s*\{([\s\S]*?)\n\}/m);
+  if(msBlock){
+    const rRe=/\{key="([^"]+)",\s*delay=(\d+),\s*times=(\d+)\}/g; let mm;
+    while((mm=rRe.exec(msBlock[1]))!==null) cfg.mouseSkills.push({key:mm[1],delay:+mm[2],repeat:+mm[3]});
+  }
+  const bBlock=lua.match(/^buffs\s*=\s*\{([\s\S]*?)\n\}/m);
+  if(bBlock){
+    const rRe=/\{key="([^"]+)",\s*interval=(\d+),\s*preLockout=(\d+),\s*delay=(\d+)\}/g; let bm;
+    while((bm=rRe.exec(bBlock[1]))!==null)
+      cfg.buffs.push({key:bm[1],interval:Math.round(+bm[2]/1000),offset:0,preLockout:Math.round(+bm[3]/1000),postDelay:+bm[4],enabled:true,name:'Buff '+bm[1].toUpperCase()});
+  }
+  return cfg;
+}
+
+// ── INLINE LOADER ─────────────────────────────
+let _loaderFn = '';
+
+function setLoaderFile(fn) {
+  _loaderFn = fn;
+  document.getElementById('loader-fn-display').textContent = fn;
+  renderLoaderInline(document.getElementById('loader-path-input').value);
+}
+
+function updateLoaderInline() {
+  const dir = document.getElementById('loader-path-input').value;
+  setCookie('loaderDirPath', dir, 365);
+  renderLoaderInline(dir);
+}
+
+function renderLoaderInline(dir) {
+  if (!_loaderFn) return;
+  const sep = (dir.endsWith('\\') || dir.endsWith('/')) ? '' : '\\';
+  const trigBtn = +document.getElementById('triggerButton').value || 9;
+  document.getElementById('loader-inline-out').textContent =
+`-- ============================================================
+--  G HUB LOADER -- paste this ONCE, never change again
+-- ============================================================
+
+local MACRO_PATH = [[${dir+sep+_loaderFn}]]
+
+function OnEvent(event, arg)
+    if event == "MOUSE_BUTTON_PRESSED" and arg == ${trigBtn} then
+        dofile(MACRO_PATH)
+        StartMacro()
+    end
+end`;
+}
+
+function copyLoaderInline() {
+  navigator.clipboard.writeText(document.getElementById('loader-inline-out').textContent)
+    .then(() => showToast('LOADER COPIED'));
+}
+
+// ── LUA GENERATOR ────────────────────────────
+function generateLua() {
+  const cfg    = getConfig();
+  const jitter = cfg.jitterPct/100;
+  const lMs    = loopMs(cfg);
+  const dirMap = {w:['w'],a:['a'],s:['s'],d:['d'],wa:['w','a'],wd:['w','d'],sa:['s','a'],sd:['s','d']};
+  const cards  = ['w','a','s','d'];
+  const dirL=[];
+  Object.entries(dirMap).forEach(([k,keys])=>{
+    if(!cfg.walk.dirs[k]) return;
+    const w=cards.includes(k)?cfg.walk.weightCardinal:cfg.walk.weightDiagonal;
+    dirL.push(`    {keys={${keys.map(x=>`"${x}"`).join(',')}}, weight=${w}},`);
+  });
+  const seqL=[];
+  cfg.sequence.rows.forEach(row=>{
+    if(VALID_KEYS.includes(row.action))
+      seqL.push(`    {action="key",         key="${row.action}", delay=${row.delay}, hold=${row.hold||50}, times=${row.repeat||1}},`);
+    else if(row.action==='mouse_skill')
+      seqL.push(`    {action="mouse_skill", key="${row.skillKey||'q'}", delay=${row.delay||500}},`);
+    else if(row.action==='mouse_drift')
+      seqL.push(`    {action="mouse_drift"},`);
+    else if(row.action==='recenter')
+      seqL.push(`    {action="recenter"},`);
+    else if(row.action==='wait')
+      seqL.push(`    {action="wait",         delay=${row.delay}},`);
+  });
+  const buffL=[];
+  cfg.buffs.forEach(b=>{
+    if(b.enabled===false) return;
+    buffL.push(`    {key="${b.key}", interval=${Math.round((b.interval||15)*1000)}, preLockout=${Math.round((b.preLockout||2)*1000)}, delay=${b.postDelay||500}},`);
+  });
+  const msL=[];
+  cfg.mouseSkills.forEach(r=>{
+    msL.push(`    {key="${r.key}", delay=${r.delay||500}, times=${r.repeat||1}},`);
+  });
+  const maxRtMs = cfg.maxRuntime>0?cfg.maxRuntime*1000:0;
+
+  const lua=
+`-- ============================================================
+--  G-MACRO -- Generated by G-Macro Tool
+--  Profile: ${cfg.name}
+--  Loop Time: ${(lMs/1000).toFixed(1)} sec
+--  CapsLock = stop script at any time
+-- ============================================================
+
+config = {
+    triggerButton      = ${cfg.triggerButton},
+    maxRuntime         = ${maxRtMs},
+    maxLoops           = ${cfg.maxLoops},
+    jitter             = ${jitter},
+    walkMode           = "${cfg.walk.mode}",
+    sequenceDuringWalk = ${cfg.sequence.mode==='during'},
+    sequenceCooldown   = ${cfg.sequence.cooldown},
+    cursorDrift        = false,
+    cursorRecenter     = false,
+    cursorAreaPct      = ${cfg.mouse.area/100},
+    screenWidth        = ${cfg.mouse.screenW},
+    screenHeight       = ${cfg.mouse.screenH},
+    mouseClickAreaPct  = ${cfg.walk.mouseClickArea/100},
+    mouseArrivalWait   = ${cfg.walk.mouseArrivalWait},
+    mouseClickCount    = ${cfg.walk.mouseClickCount},
+}
+
+walkDirections = {
+${dirL.join('\n')}
+}
+
+walkConfig = {
+    minDuration    = ${cfg.walk.min},
+    maxDuration    = ${cfg.walk.max},
+    changeInterval = ${cfg.walk.changeInterval},
+}
+
+-- action = "key" | "mouse_drift" | "recenter" | "wait"
+sequence = {
+${seqL.length?seqL.join('\n'):'    -- no actions configured'}
+}
+
+-- mouseSkills: fires after sequence
+mouseSkills = {
+${msL.length?msL.join('\n'):'    -- no mouse skills configured'}
+}
+
+buffs = {
+${buffL.length?buffL.join('\n'):'    -- no buffs configured'}
+}
+
+-- ============================================================
+--  ENGINE
+-- ============================================================
+
+state = {
+    running=false, startTime=0, loopCount=0,
+    lastSeqTime=0, lastMouseSkillTime=0, lastSharedRunTime=0,
+    buffNext={},
+}
+
+function Timestamp() return string.format("[%.1fs]",(GetRunningTime()-state.startTime)/1000) end
+function Log(fmt,...) OutputLogMessage(Timestamp().." "..string.format(fmt,...).."\\n") end
+function Jitter(ms) local j=math.floor(ms*config.jitter); if j<1 then return ms end; return ms+math.random(-j,j) end
+
+function ReleaseAll()
+    for _,k in ipairs({"w","a","s","d","q","e","r","t","y","u","i","o","p","[","1","2","3","4","5","6","7","8","9","0"}) do
+        ReleaseKey(k)
+    end
+end
+
+function CheckStop()
+    if IsKeyLockOn("capslock") then Log("CapsLock -- stop."); ReleaseAll(); state.running=false; return true end
+    if config.maxRuntime>0 and (GetRunningTime()-state.startTime)>=config.maxRuntime then
+        Log("Max runtime."); ReleaseAll(); state.running=false; return true end
+    if config.maxLoops>0 and state.loopCount>=config.maxLoops then
+        Log("Max loops."); ReleaseAll(); state.running=false; return true end
+    return false
+end
+
+function SleepChecked(ms)
+    local t=GetRunningTime()+Jitter(ms)
+    while GetRunningTime()<t do if CheckStop() then return false end; Sleep(25) end
+    return true
+end
+
+function TapKey(key,holdMs)
+    if CheckStop() then return false end
+    holdMs=holdMs or 50
+    PressKey(key); Sleep(math.max(10,Jitter(holdMs))); ReleaseKey(key)
+    return true
+end
+
+function MoveMouseToCenter() MoveMouseTo(32767,32767); Sleep(30) end
+
+function MoveMouseRandom(pct)
+    local aW=math.floor(config.screenWidth*pct)
+    local aH=math.floor(config.screenHeight*pct)
+    MoveMouseToCenter()
+    MoveMouseRelative(math.random(-aW/2,aW/2),math.random(-aH/2,aH/2))
+    Sleep(30)
+end
+
+function MouseClickMove()
+    local aW=math.floor(config.screenWidth*config.mouseClickAreaPct)
+    local aH=math.floor(config.screenHeight*config.mouseClickAreaPct)
+    local x=math.random(math.floor((config.screenWidth-aW)/2),math.floor((config.screenWidth+aW)/2))
+    local y=math.random(math.floor((config.screenHeight-aH)/2),math.floor((config.screenHeight+aH)/2))
+    local lx=math.floor(x/config.screenWidth*65535)
+    local ly=math.floor(y/config.screenHeight*65535)
+    MoveMouseTo(lx,ly); Sleep(50)
+    PressMouseButton(1); Sleep(30); ReleaseMouseButton(1)
+end
+
+function InitBuffs()
+    local now=GetRunningTime()
+    for i=1,#buffs do state.buffNext[i]=now end
+end
+function AnyBuffDueSoon()
+    local now=GetRunningTime()
+    for i,b in ipairs(buffs) do if(state.buffNext[i]-now)<=b.preLockout then return true end end
+    return false
+end
+function FireDueBuffs()
+    local now=GetRunningTime()
+    for i,b in ipairs(buffs) do
+        if now>=state.buffNext[i] then
+            Log("Buff [%s]",b.key)
+            if not TapKey(b.key) then return false end
+            state.buffNext[i]=GetRunningTime()+b.interval
+            if b.delay>0 then if not SleepChecked(b.delay) then return false end end
+        end
+    end
+    return true
+end
+
+function CanRun()
+    if AnyBuffDueSoon() then return false end
+    if (GetRunningTime()-state.lastSharedRunTime)<config.sequenceCooldown then return false end
+    return true
+end
+
+function RunSequence()
+    if not CanRun() then return true end
+    Log("Sequence start")
+    for _,e in ipairs(sequence) do
+        if not FireDueBuffs() then return false end
+        if e.action=="key" then
+            for rep=1,e.times or 1 do
+                Log("  key [%s]",e.key)
+                if not TapKey(e.key,e.hold) then return false end
+                if e.delay>0 then if not SleepChecked(e.delay) then return false end end
+            end
+        elseif e.action=="mouse_drift" then
+            MoveMouseRandom(config.cursorAreaPct)
+        elseif e.action=="recenter" then
+            MoveMouseToCenter()
+        elseif e.action=="wait" then
+            if not SleepChecked(e.delay) then return false end
+        end
+    end
+    state.lastSeqTime=GetRunningTime()
+    state.lastSharedRunTime=GetRunningTime()
+    Log("Sequence done")
+    return true
+end
+
+function RunMouseSkills()
+    if #mouseSkills==0 then return true end
+    if AnyBuffDueSoon() then return true end
+    if (GetRunningTime()-state.lastSharedRunTime)<config.sequenceCooldown then return true end
+    Log("Mouse skills start")
+    for _,s in ipairs(mouseSkills) do
+        if AnyBuffDueSoon() then break end
+        if not FireDueBuffs() then return false end
+        for rep=1,s.times or 1 do
+            MoveMouseRandom(config.cursorAreaPct); Sleep(50)
+            if not TapKey(s.key,50) then return false end
+            if s.delay and s.delay>0 then if not SleepChecked(s.delay) then return false end end
+        end
+    end
+    state.lastMouseSkillTime=GetRunningTime()
+    state.lastSharedRunTime=GetRunningTime()
+    MoveMouseToCenter()
+    return true
+end
+
+function PickDirection()
+    local total=0
+    for _,d in ipairs(walkDirections) do total=total+(d.weight or 1) end
+    local roll=math.random()*total; local cum=0
+    for _,d in ipairs(walkDirections) do
+        cum=cum+(d.weight or 1); if roll<=cum then return d.keys end
+    end
+    return walkDirections[1].keys
+end
+function PressDir(keys)   for _,k in ipairs(keys) do PressKey(k)   end end
+function ReleaseDir(keys) for _,k in ipairs(keys) do ReleaseKey(k) end end
+
+function DoWalkKeyboard()
+    local total=Jitter(math.random(walkConfig.minDuration,walkConfig.maxDuration))
+    local elapsed=0; local cur=PickDirection()
+    Log("Walk %dms %s",total,table.concat(cur,"+"))
+    PressDir(cur)
+    while elapsed<total do
+        local seg=math.min(walkConfig.changeInterval,total-elapsed)
+        local t0=GetRunningTime()
+        while GetRunningTime()-t0<seg do
+            if CheckStop() then ReleaseDir(cur); return false end
+            if not FireDueBuffs() then ReleaseDir(cur); return false end
+            if config.sequenceDuringWalk then if not RunSequence() then ReleaseDir(cur); return false end end
+            Sleep(25)
+        end
+        elapsed=elapsed+seg
+        if elapsed<total then
+            ReleaseDir(cur); cur=PickDirection()
+            Log("  dir->%s",table.concat(cur,"+")); PressDir(cur)
+        end
+    end
+    ReleaseDir(cur); return true
+end
+
+function DoWalkMouse()
+    for i=1,config.mouseClickCount do
+        if CheckStop() then return false end
+        if not FireDueBuffs() then return false end
+        MouseClickMove()
+        if not SleepChecked(config.mouseArrivalWait) then return false end
+        if config.sequenceDuringWalk then if not RunSequence() then return false end end
+    end
+    return true
+end
+
+function DoWalk()
+    if config.walkMode=="off" then return true end
+    if config.walkMode=="mouse" then return DoWalkMouse() else return DoWalkKeyboard() end
+end
+
+function StartMacro()
+    ClearLog(); math.randomseed(GetRunningTime())
+    state.running=true; state.startTime=GetRunningTime()
+    state.loopCount=0; state.lastSeqTime=0
+    InitBuffs()
+    Log("G-MACRO START  trigger=%d  walk=%s",config.triggerButton,config.walkMode)
+    Log("buffs=%d  seq=%d  seqMode=%s",#buffs,#sequence,config.sequenceDuringWalk and "during" or "after")
+    Log("CapsLock=stop\\n")
+    MoveMouseToCenter()
+    while state.running do
+        if CheckStop() then return end
+        state.loopCount=state.loopCount+1
+        Log("Loop #%d",state.loopCount)
+        if not FireDueBuffs() then return end
+        if not DoWalk() then return end
+        if not config.sequenceDuringWalk then
+            if not FireDueBuffs() then return end
+            if not RunSequence() then return end
+            if not RunMouseSkills() then return end
+        end
+    end
+end
+`;
+
+  return lua;
+}
+
+// ── TOAST ─────────────────────────────────────
+let _tt;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── COOKIE HELPERS ────────────────────────────
+function setCookie(name, val, days) {
+  const exp = new Date(Date.now() + days*864e5).toUTCString();
+  document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(val)};expires=${exp};path=/;SameSite=Lax`;
+}
+function getCookie(name) {
+  const m = document.cookie.match('(?:^|; )'+encodeURIComponent(name)+'=([^;]*)');
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+// ── INIT ──────────────────────────────────────
+renderWbar('cardinal',2);
+renderWbar('diagonal',1);
+loadProfiles();
+updateTimeline();
+// init loader path from cookie
+(function(){
+  const saved = getCookie('loaderDirPath');
+  if (saved) document.getElementById('loader-path-input').value = saved;
+})();
+</script>
+</body>
+</html>
