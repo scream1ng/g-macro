@@ -1,12 +1,11 @@
-const { put, head, getDownloadUrl } = require('@vercel/blob');
+const { put, head } = require('@vercel/blob');
 
 const BLOB_PATH = 'gmacro-profiles.json';
 
 async function readProfiles() {
   try {
     const blob = await head(BLOB_PATH);
-    const { url: signedUrl } = await getDownloadUrl(blob.url);
-    const res = await fetch(signedUrl);
+    const res = await fetch(blob.downloadUrl);
     return await res.json();
   } catch {
     return [];
