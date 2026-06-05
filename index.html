@@ -492,24 +492,36 @@ input[type=range]::-webkit-slider-thumb{
       </div>
     </div>
 
-    <!-- 3. ROTATION -->
+    <!-- 3. WALK SKILLS -->
     <div class="sec">
       <div class="sec-hdr">
-        <span class="sec-title">&#x1F5A5; 3. ROTATION (SKILLS)</span>
+        <span class="sec-title">&#x1F3C3; 3. WALK SKILLS <span id="ws-count" style="font-family:var(--vt);font-size:16px;color:#888;"></span></span>
+      </div>
+      <div class="sec-body" style="padding:10px;">
+        <div style="font-family:var(--vt);font-size:14px;color:#666;margin-bottom:10px;">FIRES WHILE WALKING. NO MOVEMENT INTERRUPT. EACH HAS OWN COOLDOWN.</div>
+        <div id="walk-skill-list"></div>
+        <button class="btn-add" onclick="addWalkSkillRow()">+ ADD WALK SKILL</button>
+      </div>
+    </div>
+
+    <!-- 4. ROTATION -->
+    <div class="sec">
+      <div class="sec-hdr">
+        <span class="sec-title">&#x1F5A5; 4. ROTATION (STAND-STILL SKILLS)</span>
         <button class="help-btn">?</button>
       </div>
       <div class="sec-body" style="padding:8px;">
+        <div style="font-family:var(--vt);font-size:14px;color:#666;margin-bottom:10px;padding:0 4px;">STOPS WALK, RUNS IN ORDER, RESUMES.</div>
         <div id="seq-list"></div>
         <button class="btn-add" onclick="addSeqRow()">+ ADD ACTION</button>
         <!-- hidden sequence options -->
         <div style="display:none;">
-          <select id="seqMode"><option value="after" selected>after</option><option value="during">during</option></select>
           <input type="number" id="seqCooldown" value="500">
         </div>
       </div>
     </div>
 
-    <!-- 3.5. MOUSE SKILLS -->
+    <!-- 4.5. MOUSE SKILLS -->
     <div class="sec">
       <div class="sec-hdr">
         <span class="sec-title">&#x1F5B1; MOUSE SKILLS <span id="ms-count" style="font-family:var(--vt);font-size:16px;color:#888;"></span></span>
@@ -623,14 +635,15 @@ function mkProfile(name, icon) {
            weightCardinal:2, weightDiagonal:1,
            mouseClickArea:40, mouseArrivalWait:1800, mouseClickCount:2 },
     mouse:{ enabled:false, recenter:false, area:50, screenW:2560, screenH:1440 },
-    sequence:{ mode:'after', cooldown:500, rows:[] },
-    mouseSkills:[], buffs:[],
+    sequence:{ cooldown:500, rows:[] },
+    walkSkills:[], mouseSkills:[], buffs:[],
   };
 }
 
 function seqMs(rows) {
   let ms = 0;
   (rows||[]).forEach(r => {
+    if (r.enabled===false) return;
     if (VALID_KEYS.includes(r.action)) ms += (r.delay||0) + (r.hold||50);
     else if (r.action==='wait') ms += (r.delay||0);
   });
@@ -638,7 +651,7 @@ function seqMs(rows) {
 }
 
 function msSkillMs(rows) {
-  return (rows||[]).reduce((s,r)=>s+(r.hold||500)+(r.delay||50),0);
+  return (rows||[]).filter(r=>r.enabled!==false).reduce((s,r)=>s+(r.hold||500)+(r.delay||50),0);
 }
 
 function loopMs(p) {
@@ -647,7 +660,10 @@ function loopMs(p) {
 }
 
 function profSummary(p) {
-  const acts   = (p.sequence?.rows?.length||0) + (p.mouseSkills?.length||0);
+  const seqOn = (p.sequence?.rows||[]).filter(r=>r.enabled!==false).length;
+  const msOn  = (p.mouseSkills||[]).filter(r=>r.enabled!==false).length;
+  const wsOn  = (p.walkSkills||[]).filter(r=>r.enabled!==false).length;
+  const acts   = seqOn + msOn + wsOn;
   const timers = (p.buffs||[]).filter(b=>b.enabled!==false).length;
   const ms     = loopMs(p);
   const loop   = ms > 0 ? (ms/1000).toFixed(1)+'s' : '—';
@@ -725,8 +741,11 @@ function loadProfiles() {
 function updateSummary() {
   const cfg = getConfig();
   const ms  = loopMs(cfg);
+  const seqOn = cfg.sequence.rows.filter(r=>r.enabled!==false).length;
+  const wsOn  = (cfg.walkSkills||[]).filter(r=>r.enabled!==false).length;
+  const msOn  = cfg.mouseSkills.filter(r=>r.enabled!==false).length;
   document.getElementById('sum-loop').textContent    = ms>0?(ms/1000).toFixed(1)+'s':'—';
-  document.getElementById('sum-actions').textContent = cfg.sequence.rows.length;
+  document.getElementById('sum-actions').textContent = seqOn + wsOn + msOn;
   document.getElementById('sum-timers').textContent  = cfg.buffs.filter(b=>b.enabled!==false).length;
   document.getElementById('sum-mode').textContent    = cfg.walk.mode==='mouse'?'Mouse Move':'Keyboard Move';
 }
@@ -775,11 +794,15 @@ function attachDrag(el, idx, arr, renderFn) {
 let seqRows = [];
 
 function addSeqRow(data) {
-  seqRows.push(data||{action:'q',delay:50,hold:500,repeat:1});
+  seqRows.push(data||{action:'q',delay:50,hold:500,repeat:1,enabled:true});
   renderSeqList(); updateTimeline(); updateSummary();
 }
 function removeSeqRow(i) {
   seqRows.splice(i,1); renderSeqList(); updateTimeline(); updateSummary();
+}
+function toggleSeqRow(i) {
+  seqRows[i].enabled = !(seqRows[i].enabled!==false);
+  renderSeqList(); updateTimeline(); updateSummary();
 }
 
 function buildActionOpts(val) {
@@ -797,11 +820,15 @@ function renderSeqList() {
     const isKey = VALID_KEYS.includes(row.action);
     const isWait = row.action === 'wait';
     const hasMs = isKey || isWait || row.action === 'mouse_skill';
+    const enabled = row.enabled!==false;
     const wrap = document.createElement('div');
     wrap.className = 'seq-row'; wrap.draggable = true; wrap._drag = i;
     wrap.style.borderLeftColor = COLORS[i % COLORS.length];
+    wrap.style.opacity = enabled ? '1' : '0.4';
     wrap.innerHTML = `
       <span class="drag-handle">⠿</span>
+      <input type="checkbox" ${enabled?'checked':''} title="${enabled?'Disable':'Enable'}"
+        onchange="toggleSeqRow(${i})" style="margin:0 4px;cursor:pointer;">
       <select class="seq-key-sel">${buildActionOpts(row.action)}</select>
       <div class="seq-spacer"></div>
       <div style="display:flex;align-items:center;gap:3px;">
@@ -834,22 +861,30 @@ function renderSeqList() {
 let buffRows = [];
 
 function addBuffRow(data) {
-  buffRows.push(data||{key:'8',interval:5,hold:100,delay:500,preLockout:2,postDelay:500});
+  buffRows.push(data||{key:'8',interval:5,hold:100,delay:500,preLockout:2,postDelay:500,enabled:true});
   renderBuffList(); updateTimeline(); updateSummary();
 }
 function removeBuffRow(i) {
   buffRows.splice(i,1); renderBuffList(); updateTimeline(); updateSummary();
+}
+function toggleBuff(i) {
+  buffRows[i].enabled = !(buffRows[i].enabled!==false);
+  renderBuffList(); updateTimeline(); updateSummary();
 }
 
 function renderBuffList() {
   const list = document.getElementById('buff-list');
   list.innerHTML = '';
   buffRows.forEach((row, i) => {
+    const enabled = row.enabled!==false;
     const kOpts = VALID_KEYS.map(k=>`<option value="${k}"${row.key===k?' selected':''}>${k.toUpperCase()}</option>`).join('');
     const div = document.createElement('div');
     div.className = 'seq-row';
     div.style.borderLeftColor = COLORS[i % COLORS.length];
+    div.style.opacity = enabled ? '1' : '0.4';
     div.innerHTML = `
+      <input type="checkbox" ${enabled?'checked':''} title="${enabled?'Disable':'Enable'}"
+        onchange="toggleBuff(${i})" style="margin:0 4px;cursor:pointer;">
       <select class="seq-key-sel" onchange="buffRows[${i}].key=this.value;">${kOpts}</select>
       <input class="t-name" type="text" value="${row.name||''}" placeholder="NAME"
         onchange="buffRows[${i}].name=this.value;" style="flex:1;min-width:60px;">
@@ -876,15 +911,77 @@ function renderBuffList() {
   });
 }
 
+// ── WALK SKILL ROWS ───────────────────────────
+let walkSkillRows = [];
+
+function addWalkSkillRow(data) {
+  walkSkillRows.push(data||{key:'q',hold:100,interval:8,enabled:true});
+  renderWsList(); updateTimeline(); updateSummary();
+}
+function removeWalkSkillRow(i) {
+  walkSkillRows.splice(i,1); renderWsList(); updateTimeline(); updateSummary();
+}
+function toggleWalkSkill(i) {
+  walkSkillRows[i].enabled = !(walkSkillRows[i].enabled!==false);
+  renderWsList(); updateTimeline(); updateSummary();
+}
+
+function renderWsList() {
+  const list = document.getElementById('walk-skill-list');
+  if (!list) return;
+  list.innerHTML = '';
+  const cnt = document.getElementById('ws-count');
+  if (cnt) cnt.textContent = walkSkillRows.length ? walkSkillRows.length+' SKILL'+(walkSkillRows.length!==1?'S':'') : '';
+  walkSkillRows.forEach((row, i) => {
+    const enabled = row.enabled!==false;
+    const opts = VALID_KEYS.map(k=>
+      `<option value="${k}"${row.key===k?' selected':''}>${k.toUpperCase()}</option>`).join('');
+    const div = document.createElement('div');
+    div.className = 'seq-row'; div.draggable = true; div._drag = i;
+    div.style.borderLeftColor = COLORS[(i+2) % COLORS.length];
+    div.style.opacity = enabled ? '1' : '0.4';
+    div.innerHTML = `
+      <span class="drag-handle">⠿</span>
+      <input type="checkbox" ${enabled?'checked':''} title="${enabled?'Disable':'Enable'}"
+        onchange="toggleWalkSkill(${i})" style="margin:0 4px;cursor:pointer;">
+      <select class="seq-key-sel">${opts}</select>
+      <div class="seq-spacer"></div>
+      <div style="display:flex;align-items:center;gap:3px;">
+        <span class="ms-sfx" style="font-size:13px;color:#999;">hold</span>
+        <input type="number" class="seq-ms" value="${row.hold||100}" min="25" step="25"
+          onchange="walkSkillRows[${i}].hold=+this.value;">
+        <span class="ms-sfx">ms</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:3px;margin-left:6px;">
+        <span class="ms-sfx" style="font-size:13px;color:#999;">every</span>
+        <input type="number" class="seq-ms" value="${row.interval||8}" min="0.5" step="0.5"
+          onchange="walkSkillRows[${i}].interval=+this.value;updateTimeline();">
+        <span class="ms-sfx">sec</span>
+      </div>
+      <button class="del-btn" onclick="removeWalkSkillRow(${i})">×</button>`;
+    attachDrag(div, i, walkSkillRows, renderWsList);
+    const sel = div.querySelector('select');
+    sel.value = row.key;
+    sel.addEventListener('change', function() {
+      walkSkillRows[i].key = this.value;
+    });
+    list.appendChild(div);
+  });
+}
+
 // ── MOUSE SKILL ROWS ──────────────────────────
 let mouseSkillRows = [];
 
 function addMouseSkillRow(data) {
-  mouseSkillRows.push(data||{key:'LMB',hold:500,delay:50});
+  mouseSkillRows.push(data||{key:'LMB',hold:500,delay:50,enabled:true});
   renderMsList(); updateTimeline();
 }
 function removeMouseSkillRow(i) {
   mouseSkillRows.splice(i,1); renderMsList(); updateTimeline();
+}
+function toggleMouseSkill(i) {
+  mouseSkillRows[i].enabled = !(mouseSkillRows[i].enabled!==false);
+  renderMsList(); updateTimeline(); updateSummary();
 }
 
 function renderMsList() {
@@ -894,13 +991,17 @@ function renderMsList() {
   const cnt = document.getElementById('ms-count');
   if (cnt) cnt.textContent = mouseSkillRows.length ? mouseSkillRows.length+' SKILL'+(mouseSkillRows.length!==1?'S':'') : '';
   mouseSkillRows.forEach((row, i) => {
+    const enabled = row.enabled!==false;
     const opts = [...VALID_KEYS,...MOUSE_BTNS].map(k=>
       `<option value="${k}"${row.key===k?' selected':''}>${k.toUpperCase()}</option>`).join('');
     const div = document.createElement('div');
     div.className = 'seq-row'; div.draggable = true; div._drag = i;
     div.style.borderLeftColor = COLORS[(i+5) % COLORS.length];
+    div.style.opacity = enabled ? '1' : '0.4';
     div.innerHTML = `
       <span class="drag-handle">⠿</span>
+      <input type="checkbox" ${enabled?'checked':''} title="${enabled?'Disable':'Enable'}"
+        onchange="toggleMouseSkill(${i})" style="margin:0 4px;cursor:pointer;">
       <select class="seq-key-sel">${opts}</select>
       <div class="seq-spacer"></div>
       <div style="display:flex;align-items:center;gap:3px;">
@@ -944,12 +1045,14 @@ function updateTimeline() {
   const segs = [];
   segs.push({label:'WALK', ms:wAvg, color:'#666', alpha:1});
   cfg.sequence.rows.forEach((row,i)=>{
+    if (row.enabled===false) return;
     const isKey = VALID_KEYS.includes(row.action);
     const ms = (row.delay||0)+(isKey?(row.hold||50):0);
     if (!ms) return;
     segs.push({label: isKey?row.action.toUpperCase():(row.action==='wait'?'WAIT':row.action.replace('_',' ').toUpperCase()), ms, color:ACT_COLORS[i%ACT_COLORS.length], alpha:1});
   });
   cfg.mouseSkills.forEach((row,i)=>{
+    if (row.enabled===false) return;
     const ms = (row.hold||500)+(row.delay||50);
     segs.push({label:'M:'+row.key.toUpperCase(), ms, color:ACT_COLORS[(i+4)%ACT_COLORS.length], alpha:.7});
   });
@@ -1006,11 +1109,12 @@ function updateTimeline() {
     bdEl.appendChild(row);
   });
 
-  // buffs list
+  // buffs + walk skills list
   const buffsEl = document.getElementById('tl-buffs');
   buffsEl.innerHTML='';
   const activeBufss = cfg.buffs.filter(b=>b.enabled!==false);
-  document.getElementById('tl-buff-title').style.display = activeBufss.length?'':'none';
+  const activeWalkSkills = (cfg.walkSkills||[]).filter(s=>s.enabled!==false);
+  document.getElementById('tl-buff-title').style.display = (activeBufss.length||activeWalkSkills.length)?'':'none';
   activeBufss.forEach((b,i)=>{
     const minVal = b.interval||5;
     const intervalStr = Number.isInteger(minVal)?`${minVal}m`:`${minVal}m`;
@@ -1023,6 +1127,15 @@ function updateTimeline() {
       ${warn?`<span class="tl-buff-warn">⚠ < loop</span>`:''}`;
     buffsEl.appendChild(row);
   });
+  activeWalkSkills.forEach(s=>{
+    const sec = s.interval||8;
+    const row = document.createElement('div');
+    row.className='tl-buff-row';
+    row.innerHTML=`
+      <span class="tl-buff-key">${s.key.toUpperCase()}</span>
+      <span class="tl-buff-info">walk-skill — every ${sec}s</span>`;
+    buffsEl.appendChild(row);
+  });
 
   renderConflicts(cfg, lMs);
   updateSummary();
@@ -1032,8 +1145,10 @@ function renderConflicts(cfg, lMs) {
   const el = document.getElementById('conf-list');
   el.innerHTML='';
   const issues=[];
-  if(!cfg.sequence.rows.length && !cfg.mouseSkills.length)
-    issues.push({msg:'No actions configured.'});
+  const anyEnabled = cfg.sequence.rows.some(r=>r.enabled!==false)
+    || cfg.mouseSkills.some(r=>r.enabled!==false)
+    || (cfg.walkSkills||[]).some(r=>r.enabled!==false);
+  if(!anyEnabled) issues.push({msg:'No actions configured.'});
   cfg.buffs.filter(b=>b.enabled!==false).forEach(b=>{
     if((b.interval||5)*60*1000 < lMs)
       issues.push({msg:`${b.key.toUpperCase()} buff interval shorter than loop — will miss fires.`});
@@ -1085,10 +1200,10 @@ function getConfig() {
       screenH:+document.getElementById('screenH2').value,
     },
     sequence:{
-      mode:    document.getElementById('seqMode').value,
       cooldown:+document.getElementById('seqCooldown').value,
       rows:    JSON.parse(JSON.stringify(seqRows)),
     },
+    walkSkills:  JSON.parse(JSON.stringify(walkSkillRows)),
     mouseSkills: JSON.parse(JSON.stringify(mouseSkillRows)),
     buffs:       JSON.parse(JSON.stringify(buffRows)),
   };
@@ -1133,11 +1248,12 @@ function applyConfig(cfg) {
     if (cfg.mouse.screenH!==undefined) setVal('screenH2', cfg.mouse.screenH);
   }
   if (cfg.sequence){
-    setVal('seqMode', cfg.sequence.mode||'after');
     setVal('seqCooldown', cfg.sequence.cooldown||500);
     seqRows = cfg.sequence.rows||[];
     renderSeqList();
   }
+  walkSkillRows = cfg.walkSkills || [];
+  renderWsList();
   if (cfg.mouseSkills){ mouseSkillRows=cfg.mouseSkills; renderMsList(); }
   if (cfg.buffs){ buffRows=cfg.buffs; renderBuffList(); }
   updateTimeline();
@@ -1205,8 +1321,8 @@ function parseLuaConfig(lua) {
           weightCardinal:2,weightDiagonal:1,
           mouseClickArea:40,mouseArrivalWait:1800,mouseClickCount:2},
     mouse:{enabled:false,recenter:false,area:50,screenW:2560,screenH:1440},
-    sequence:{mode:'after',cooldown:500,rows:[]},
-    mouseSkills:[],buffs:[],
+    sequence:{cooldown:500,rows:[]},
+    walkSkills:[],mouseSkills:[],buffs:[],
   };
   const num=(k)=>{const m=lua.match(new RegExp(k+'\\s*=\\s*([\\d.]+)'));return m?+m[1]:null;};
   const str=(k)=>{const m=lua.match(new RegExp(k+'\\s*=\\s*"([^"]+)"'));return m?m[1]:null;};
@@ -1216,7 +1332,6 @@ function parseLuaConfig(lua) {
   if(num('maxLoops')!==null)          cfg.maxLoops              = num('maxLoops');
   if(num('jitter')!==null)            cfg.jitterPct             = Math.round(num('jitter')*100);
   if(str('walkMode')!==null)          cfg.walk.mode             = str('walkMode');
-  if(bool('sequenceDuringWalk')!==null) cfg.sequence.mode       = bool('sequenceDuringWalk')?'during':'after';
   if(num('sequenceCooldown')!==null)  cfg.sequence.cooldown     = num('sequenceCooldown');
   if(num('cursorAreaPct')!==null)     cfg.mouse.area            = Math.round(num('cursorAreaPct')*100);
   if(num('screenWidth')!==null)       cfg.mouse.screenW         = num('screenWidth');
@@ -1248,7 +1363,13 @@ function parseLuaConfig(lua) {
   const msBlock=lua.match(/^mouseSkills\s*=\s*\{([\s\S]*?)\n\}/m);
   if(msBlock){
     const rRe=/\{key="([^"]+)",\s*delay=(\d+),\s*times=(\d+)\}/g; let mm;
-    while((mm=rRe.exec(msBlock[1]))!==null) cfg.mouseSkills.push({key:mm[1],delay:+mm[2],repeat:+mm[3]});
+    while((mm=rRe.exec(msBlock[1]))!==null) cfg.mouseSkills.push({key:mm[1],delay:+mm[2],repeat:+mm[3],enabled:true});
+  }
+  const wsBlock=lua.match(/^walkSkills\s*=\s*\{([\s\S]*?)\n\}/m);
+  if(wsBlock){
+    const rRe=/\{key="([^"]+)",\s*hold=(\d+),\s*interval=(\d+)\}/g; let wm;
+    while((wm=rRe.exec(wsBlock[1]))!==null)
+      cfg.walkSkills.push({key:wm[1],hold:+wm[2],interval:+(+wm[3]/1000).toFixed(2),enabled:true});
   }
   const bBlock=lua.match(/^buffs\s*=\s*\{([\s\S]*?)\n\}/m);
   if(bBlock){
@@ -1321,6 +1442,7 @@ function generateLua() {
   });
   const seqL=[];
   cfg.sequence.rows.forEach(row=>{
+    if(row.enabled===false) return;
     if(VALID_KEYS.includes(row.action))
       seqL.push(`    {action="key",         key="${row.action}", delay=${row.delay}, hold=${row.hold||50}, times=${row.repeat||1}},`);
     else if(row.action==='mouse_skill')
@@ -1339,7 +1461,13 @@ function generateLua() {
   });
   const msL=[];
   cfg.mouseSkills.forEach(r=>{
+    if(r.enabled===false) return;
     msL.push(`    {key="${r.key}", delay=${r.delay||500}, times=${r.repeat||1}},`);
+  });
+  const wsL=[];
+  (cfg.walkSkills||[]).forEach(r=>{
+    if(r.enabled===false) return;
+    wsL.push(`    {key="${r.key}", hold=${r.hold||100}, interval=${Math.round((r.interval||8)*1000)}},`);
   });
   const maxRtMs = cfg.maxRuntime>0?cfg.maxRuntime*1000:0;
 
@@ -1357,7 +1485,6 @@ config = {
     maxLoops           = ${cfg.maxLoops},
     jitter             = ${jitter},
     walkMode           = "${cfg.walk.mode}",
-    sequenceDuringWalk = ${cfg.sequence.mode==='during'},
     sequenceCooldown   = ${cfg.sequence.cooldown},
     cursorDrift        = false,
     cursorRecenter     = false,
@@ -1379,7 +1506,13 @@ walkConfig = {
     changeInterval = ${cfg.walk.changeInterval},
 }
 
+-- walkSkills: fire DURING walk on per-skill interval, no movement interrupt
+walkSkills = {
+${wsL.length?wsL.join('\n'):'    -- no walk skills configured'}
+}
+
 -- action = "key" | "mouse_drift" | "recenter" | "wait"
+-- sequence: stand-still skills, stops walk, runs in order
 sequence = {
 ${seqL.length?seqL.join('\n'):'    -- no actions configured'}
 }
@@ -1400,7 +1533,7 @@ ${buffL.length?buffL.join('\n'):'    -- no buffs configured'}
 state = {
     running=false, startTime=0, loopCount=0,
     lastSeqTime=0, lastMouseSkillTime=0, lastSharedRunTime=0,
-    buffNext={},
+    buffNext={}, walkSkillNext={},
 }
 
 function Timestamp() return string.format("[%.1fs]",(GetRunningTime()-state.startTime)/1000) end
@@ -1459,6 +1592,22 @@ end
 function InitBuffs()
     local now=GetRunningTime()
     for i=1,#buffs do state.buffNext[i]=now end
+end
+function InitWalkSkills()
+    local now=GetRunningTime()
+    for i=1,#walkSkills do state.walkSkillNext[i]=now end
+end
+function FireDueWalkSkills()
+    if CheckStop() then return false end
+    local now=GetRunningTime()
+    for i,s in ipairs(walkSkills) do
+        if now>=state.walkSkillNext[i] then
+            Log("WalkSkill [%s]",s.key)
+            if not TapKey(s.key,s.hold) then return false end
+            state.walkSkillNext[i]=GetRunningTime()+Jitter(s.interval)
+        end
+    end
+    return true
 end
 function AnyBuffDueSoon()
     local now=GetRunningTime()
@@ -1552,7 +1701,7 @@ function DoWalkKeyboard()
         while GetRunningTime()-t0<seg do
             if CheckStop() then ReleaseDir(cur); return false end
             if not FireDueBuffs() then ReleaseDir(cur); return false end
-            if config.sequenceDuringWalk then if not RunSequence() then ReleaseDir(cur); return false end end
+            if not FireDueWalkSkills() then ReleaseDir(cur); return false end
             Sleep(25)
         end
         elapsed=elapsed+seg
@@ -1568,9 +1717,9 @@ function DoWalkMouse()
     for i=1,config.mouseClickCount do
         if CheckStop() then return false end
         if not FireDueBuffs() then return false end
+        if not FireDueWalkSkills() then return false end
         MouseClickMove()
         if not SleepChecked(config.mouseArrivalWait) then return false end
-        if config.sequenceDuringWalk then if not RunSequence() then return false end end
     end
     return true
 end
@@ -1584,9 +1733,9 @@ function StartMacro()
     ClearLog(); math.randomseed(GetRunningTime())
     state.running=true; state.startTime=GetRunningTime()
     state.loopCount=0; state.lastSeqTime=0
-    InitBuffs()
+    InitBuffs(); InitWalkSkills()
     Log("G-MACRO START  trigger=%d  walk=%s",config.triggerButton,config.walkMode)
-    Log("buffs=%d  seq=%d  seqMode=%s",#buffs,#sequence,config.sequenceDuringWalk and "during" or "after")
+    Log("buffs=%d  seq=%d  walkSkills=%d  mouseSkills=%d",#buffs,#sequence,#walkSkills,#mouseSkills)
     Log("CapsLock=stop\\n")
     MoveMouseToCenter()
     while state.running do
@@ -1595,11 +1744,9 @@ function StartMacro()
         Log("Loop #%d",state.loopCount)
         if not FireDueBuffs() then return end
         if not DoWalk() then return end
-        if not config.sequenceDuringWalk then
-            if not FireDueBuffs() then return end
-            if not RunSequence() then return end
-            if not RunMouseSkills() then return end
-        end
+        if not FireDueBuffs() then return end
+        if not RunSequence() then return end
+        if not RunMouseSkills() then return end
     end
 end
 `;
