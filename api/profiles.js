@@ -16,6 +16,7 @@ async function writeProfiles(profiles) {
   await put(BLOB_PATH, JSON.stringify(profiles), {
     access: 'public',
     addRandomSuffix: false,
+    allowOverwrite: true,
     contentType: 'application/json',
   });
 }
@@ -54,7 +55,12 @@ module.exports = async function handler(req, res) {
     } else {
       all.push({ ...profile, ownerId, publishedAt: Date.now() });
     }
-    await writeProfiles(all);
+    try {
+      await writeProfiles(all);
+    } catch (e) {
+      console.error('writeProfiles error:', e.message);
+      return res.status(500).json({ error: e.message });
+    }
     return res.status(200).json(all);
   }
 
