@@ -5,16 +5,18 @@ const BLOB_PATH = 'gmacro-profiles.json';
 async function readProfiles() {
   try {
     const blob = await head(BLOB_PATH);
-    const res = await fetch(blob.downloadUrl);
+    const res = await fetch(blob.url, { cache: 'no-store' });
+    if (!res.ok) { console.error('readProfiles fetch failed:', res.status, blob.url); return []; }
     return await res.json();
-  } catch {
+  } catch (e) {
+    console.error('readProfiles error:', e.message);
     return [];
   }
 }
 
 async function writeProfiles(profiles) {
   await put(BLOB_PATH, JSON.stringify(profiles), {
-    access: 'private',
+    access: 'public',
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: 'application/json',
