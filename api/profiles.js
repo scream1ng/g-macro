@@ -1,13 +1,13 @@
-const { put, head } = require('@vercel/blob');
+const { put, get } = require('@vercel/blob');
 
 const BLOB_PATH = 'gmacro-profiles.json';
 
 async function readProfiles() {
   try {
-    const blob = await head(BLOB_PATH);
-    const res = await fetch(blob.url, { cache: 'no-store' });
-    if (!res.ok) { console.error('readProfiles fetch failed:', res.status, blob.url); return []; }
-    return await res.json();
+    const result = await get(BLOB_PATH, { access: 'private', useCache: false });
+    if (!result || result.statusCode !== 200) return [];
+    const text = await new Response(result.stream).text();
+    return JSON.parse(text);
   } catch (e) {
     console.error('readProfiles error:', e.message);
     return [];
@@ -16,7 +16,7 @@ async function readProfiles() {
 
 async function writeProfiles(profiles) {
   await put(BLOB_PATH, JSON.stringify(profiles), {
-    access: 'public',
+    access: 'private',
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: 'application/json',
