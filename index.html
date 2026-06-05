@@ -507,14 +507,16 @@ input[type=range]::-webkit-slider-thumb{
     <!-- 4. ROTATION -->
     <div class="sec">
       <div class="sec-hdr">
-        <span class="sec-title">&#x1F5A5; 4. ROTATION (STAND-STILL SKILLS)</span>
+        <span class="sec-title">&#x1F5A5; 4. ROTATION</span>
+        <select id="seqMode" onchange="updateTimeline()" style="font-family:var(--vt);font-size:14px;background:var(--bg2);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
+          <option value="after">CAST: STAND STILL</option>
+          <option value="during">CAST: DURING WALK</option>
+        </select>
         <button class="help-btn">?</button>
       </div>
       <div class="sec-body" style="padding:8px;">
-        <div style="font-family:var(--vt);font-size:14px;color:#666;margin-bottom:10px;padding:0 4px;">STOPS WALK, RUNS IN ORDER, RESUMES.</div>
         <div id="seq-list"></div>
         <button class="btn-add" onclick="addSeqRow()">+ ADD ACTION</button>
-        <!-- hidden sequence options -->
         <div style="display:none;">
           <input type="number" id="seqCooldown" value="500">
         </div>
@@ -525,9 +527,13 @@ input[type=range]::-webkit-slider-thumb{
     <div class="sec">
       <div class="sec-hdr">
         <span class="sec-title">&#x1F5B1; MOUSE SKILLS <span id="ms-count" style="font-family:var(--vt);font-size:16px;color:#888;"></span></span>
+        <select id="mouseSkillMode" onchange="updateTimeline()" style="font-family:var(--vt);font-size:14px;background:var(--bg2);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
+          <option value="after">CAST: STAND STILL</option>
+          <option value="during">CAST: DURING WALK</option>
+        </select>
       </div>
       <div class="sec-body" style="padding:10px;">
-        <div style="font-family:var(--vt);font-size:14px;color:#666;margin-bottom:10px;">FIRES AFTER MAIN SEQUENCE. MOVES CURSOR TO RANDOM POSITION, PRESSES KEY, THEN RECENTERS.</div>
+        <div style="font-family:var(--vt);font-size:14px;color:#666;margin-bottom:10px;">MOVES CURSOR TO RANDOM POSITION, PRESSES KEY, THEN RECENTERS.</div>
         <div class="f-grid" style="grid-template-columns:130px 1fr;gap:6px 14px;margin-bottom:10px;">
           <label class="f-lbl">SCREEN WIDTH</label>
           <input type="number" id="screenW2" value="2560" style="width:100%;">
@@ -635,7 +641,8 @@ function mkProfile(name, icon) {
            weightCardinal:2, weightDiagonal:1,
            mouseClickArea:40, mouseArrivalWait:1800, mouseClickCount:2 },
     mouse:{ enabled:false, recenter:false, area:50, screenW:2560, screenH:1440 },
-    sequence:{ cooldown:500, rows:[] },
+    sequence:{ mode:'after', cooldown:500, rows:[] },
+    mouseSkillsMode:'after',
     walkSkills:[], mouseSkills:[], buffs:[],
   };
 }
@@ -1200,12 +1207,14 @@ function getConfig() {
       screenH:+document.getElementById('screenH2').value,
     },
     sequence:{
+      mode:    document.getElementById('seqMode').value,
       cooldown:+document.getElementById('seqCooldown').value,
       rows:    JSON.parse(JSON.stringify(seqRows)),
     },
-    walkSkills:  JSON.parse(JSON.stringify(walkSkillRows)),
-    mouseSkills: JSON.parse(JSON.stringify(mouseSkillRows)),
-    buffs:       JSON.parse(JSON.stringify(buffRows)),
+    mouseSkillsMode: document.getElementById('mouseSkillMode').value,
+    walkSkills:      JSON.parse(JSON.stringify(walkSkillRows)),
+    mouseSkills:     JSON.parse(JSON.stringify(mouseSkillRows)),
+    buffs:           JSON.parse(JSON.stringify(buffRows)),
   };
 }
 
@@ -1248,10 +1257,12 @@ function applyConfig(cfg) {
     if (cfg.mouse.screenH!==undefined) setVal('screenH2', cfg.mouse.screenH);
   }
   if (cfg.sequence){
+    setVal('seqMode', cfg.sequence.mode||'after');
     setVal('seqCooldown', cfg.sequence.cooldown||500);
     seqRows = cfg.sequence.rows||[];
     renderSeqList();
   }
+  setVal('mouseSkillMode', cfg.mouseSkillsMode||'after');
   walkSkillRows = cfg.walkSkills || [];
   renderWsList();
   if (cfg.mouseSkills){ mouseSkillRows=cfg.mouseSkills; renderMsList(); }
@@ -1321,7 +1332,8 @@ function parseLuaConfig(lua) {
           weightCardinal:2,weightDiagonal:1,
           mouseClickArea:40,mouseArrivalWait:1800,mouseClickCount:2},
     mouse:{enabled:false,recenter:false,area:50,screenW:2560,screenH:1440},
-    sequence:{cooldown:500,rows:[]},
+    sequence:{mode:'after',cooldown:500,rows:[]},
+    mouseSkillsMode:'after',
     walkSkills:[],mouseSkills:[],buffs:[],
   };
   const num=(k)=>{const m=lua.match(new RegExp(k+'\\s*=\\s*([\\d.]+)'));return m?+m[1]:null;};
@@ -1332,6 +1344,8 @@ function parseLuaConfig(lua) {
   if(num('maxLoops')!==null)          cfg.maxLoops              = num('maxLoops');
   if(num('jitter')!==null)            cfg.jitterPct             = Math.round(num('jitter')*100);
   if(str('walkMode')!==null)          cfg.walk.mode             = str('walkMode');
+  if(bool('sequenceDuringWalk')!==null) cfg.sequence.mode       = bool('sequenceDuringWalk')?'during':'after';
+  if(bool('mouseSkillsDuringWalk')!==null) cfg.mouseSkillsMode  = bool('mouseSkillsDuringWalk')?'during':'after';
   if(num('sequenceCooldown')!==null)  cfg.sequence.cooldown     = num('sequenceCooldown');
   if(num('cursorAreaPct')!==null)     cfg.mouse.area            = Math.round(num('cursorAreaPct')*100);
   if(num('screenWidth')!==null)       cfg.mouse.screenW         = num('screenWidth');
@@ -1485,6 +1499,8 @@ config = {
     maxLoops           = ${cfg.maxLoops},
     jitter             = ${jitter},
     walkMode           = "${cfg.walk.mode}",
+    sequenceDuringWalk = ${cfg.sequence.mode==='during'},
+    mouseSkillsDuringWalk = ${cfg.mouseSkillsMode==='during'},
     sequenceCooldown   = ${cfg.sequence.cooldown},
     cursorDrift        = false,
     cursorRecenter     = false,
@@ -1702,6 +1718,8 @@ function DoWalkKeyboard()
             if CheckStop() then ReleaseDir(cur); return false end
             if not FireDueBuffs() then ReleaseDir(cur); return false end
             if not FireDueWalkSkills() then ReleaseDir(cur); return false end
+            if config.sequenceDuringWalk then if not RunSequence() then ReleaseDir(cur); return false end end
+            if config.mouseSkillsDuringWalk then if not RunMouseSkills() then ReleaseDir(cur); return false end end
             Sleep(25)
         end
         elapsed=elapsed+seg
@@ -1720,6 +1738,8 @@ function DoWalkMouse()
         if not FireDueWalkSkills() then return false end
         MouseClickMove()
         if not SleepChecked(config.mouseArrivalWait) then return false end
+        if config.sequenceDuringWalk then if not RunSequence() then return false end end
+        if config.mouseSkillsDuringWalk then if not RunMouseSkills() then return false end end
     end
     return true
 end
@@ -1745,8 +1765,8 @@ function StartMacro()
         if not FireDueBuffs() then return end
         if not DoWalk() then return end
         if not FireDueBuffs() then return end
-        if not RunSequence() then return end
-        if not RunMouseSkills() then return end
+        if not config.sequenceDuringWalk then if not RunSequence() then return end end
+        if not config.mouseSkillsDuringWalk then if not RunMouseSkills() then return end end
     end
 end
 `;
