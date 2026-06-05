@@ -58,20 +58,17 @@ body::before{
 .p-card{
   background:var(--bg2);border:2px solid var(--border);
   padding:7px 9px;cursor:pointer;display:flex;gap:8px;align-items:flex-start;
+  position:relative;
 }
+.p-del{position:absolute;top:4px;right:4px;background:none;border:none;color:inherit;opacity:.4;cursor:pointer;font-size:14px;padding:0 2px;line-height:1;}
+.p-del:hover{opacity:1;}
+.p-card.active .p-del{color:var(--bg);}
 .p-card:hover{background:var(--panel);}
 .p-card.active{background:var(--hot);border-color:var(--hot);color:var(--bg);}
-.p-icon{font-size:26px;line-height:1;flex-shrink:0;width:30px;text-align:center;}
 .p-name{font-family:var(--px);font-size:8px;letter-spacing:1px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .p-meta{font-family:var(--vt);font-size:15px;line-height:1.4;color:var(--text2);}
 .p-card.active .p-meta{color:rgba(255,255,255,.7);}
 .p-card.active .p-name{color:var(--bg);}
-.btn-new-p{
-  margin:6px;padding:7px;background:none;border:2px dashed var(--border);
-  color:var(--text2);font-family:var(--vt);font-size:16px;letter-spacing:1px;
-  cursor:pointer;width:calc(100% - 12px);flex-shrink:0;
-}
-.btn-new-p:hover{border-color:var(--hot);color:var(--hot);}
 .p-summary{border-top:2px solid var(--border);padding:9px 12px;flex-shrink:0;background:var(--bg2);}
 .p-sum-title{font-family:var(--px);font-size:8px;letter-spacing:1px;color:var(--hot);margin-bottom:7px;}
 .sum-row{display:flex;justify-content:space-between;font-family:var(--vt);font-size:15px;color:var(--text2);margin-bottom:2px;}
@@ -94,15 +91,19 @@ header{
 
 /* ── BUTTONS ── */
 .btn{
-  font-family:var(--px);font-size:8px;letter-spacing:1px;
-  padding:7px 13px;border:2px solid var(--bd2);background:var(--bg);color:var(--text);cursor:pointer;
+  font-family:var(--vt);font-size:18px;letter-spacing:1px;
+  padding:5px 13px;border:2px solid var(--bd2);background:var(--bg);color:var(--text);cursor:pointer;
 }
 .btn:hover{background:var(--bg3);}
 .btn-primary{background:var(--hot);color:var(--bg);border-color:var(--hot);}
 .btn-primary:hover{background:#333;}
 
 /* ── SECTIONS ── */
-.sections{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.sections{flex:1;overflow-y:auto;padding:12px;}
+.sections-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr 440px;gap:12px;align-items:start;}
+.sections-left{display:flex;flex-direction:column;gap:10px;}
+.sections-right{display:flex;flex-direction:column;gap:10px;position:sticky;top:0;}
+
 .sec{background:var(--panel);border:2px solid var(--border);}
 .sec-hdr{
   display:flex;align-items:center;justify-content:space-between;
@@ -138,17 +139,6 @@ select:focus,input:focus{border-color:var(--hot);}
   font-size:8px;color:var(--text2);pointer-events:none;
 }
 
-/* spinbox */
-.spinbox{display:inline-flex;flex-direction:column;}
-.spinbox input{border-bottom:none;text-align:center;width:100%;}
-.sp-btns{display:flex;flex-direction:column;}
-.sp-btn{
-  background:var(--bg2);border:2px solid var(--bd2);border-top:1px solid var(--bd2);
-  color:var(--text);font-size:8px;cursor:pointer;text-align:center;
-  line-height:13px;height:13px;user-select:none;
-}
-.sp-btn:first-child{border-top:2px solid var(--bd2);}
-.sp-btn:hover{background:var(--bg3);}
 
 /* slider */
 .sl-wrap{display:flex;align-items:center;gap:9px;}
@@ -196,16 +186,6 @@ input[type=range]::-webkit-slider-thumb{
 .dir-center{background:none;border:none;cursor:default;}
 
 /* weight bar */
-.wbar-wrap{display:flex;flex-direction:column;gap:6px;}
-.w-row{display:flex;align-items:center;gap:7px;}
-.w-lbl{font-family:var(--vt);font-size:16px;color:var(--text2);min-width:58px;}
-.wbar-track{
-  width:110px;height:13px;background:var(--bg2);border:2px solid var(--bd2);
-  display:flex;gap:1px;padding:1px;cursor:pointer;
-}
-.wbar-cell{flex:1;background:transparent;}
-.wbar-cell.on{background:var(--hot);}
-.w-num{font-family:var(--px);font-size:7px;color:var(--hot);min-width:14px;}
 
 /* toggle switch */
 .toggle{position:relative;width:32px;height:17px;flex-shrink:0;cursor:pointer;}
@@ -225,7 +205,7 @@ input[type=range]::-webkit-slider-thumb{
 .div{border:none;border-top:1px solid var(--border);margin:9px 0;}
 
 /* ── ROTATION ── */
-.rot-panels{display:grid;grid-template-columns:1fr 1fr 220px;gap:10px;}
+.rot-panels{display:flex;flex-direction:column;gap:10px;}
 .rot-panel{border:2px solid var(--border);background:var(--bg);}
 .rot-hdr{
   display:flex;align-items:center;justify-content:space-between;
@@ -236,26 +216,25 @@ input[type=range]::-webkit-slider-thumb{
 .rot-body.collapsed{display:none;}
 .collapse-btn{background:none;border:none;font-family:var(--px);font-size:9px;color:var(--text2);cursor:pointer;}
 
-/* seq rows */
+/* ── SEQUENCE ROWS ── */
 .seq-row{
-  display:grid;grid-template-columns:15px 22px 1fr auto auto;
-  gap:5px;align-items:center;padding:5px 6px;
-  border:1px solid var(--border);margin-bottom:4px;
-  background:var(--panel);
+  display:flex;align-items:center;gap:6px;padding:4px 8px;
+  border:1px solid var(--border);border-left:4px solid #888;
+  margin-bottom:3px;background:var(--bg2);
 }
-.drag-handle{color:var(--text3);font-size:13px;cursor:grab;text-align:center;}
-.icon-slot{width:20px;height:20px;flex-shrink:0;}
+.drag-handle{color:var(--text3);font-size:13px;cursor:grab;flex-shrink:0;}
 .seq-key-sel{
-  background:var(--bg);border:2px solid var(--bd2);color:var(--hot);
-  font-family:var(--vt);font-size:16px;padding:2px 4px;
-  outline:none;width:100%;appearance:none;-webkit-appearance:none;
+  background:#1e1e1e;color:#fff;font-family:var(--vt);font-size:18px;
+  padding:5px 4px;text-align:center;border:2px solid #444;border-bottom:4px solid #000;
+  width:88px;flex-shrink:0;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;
 }
+.seq-spacer{flex:1;}
 .seq-ms{
-  width:68px;font-family:var(--vt);font-size:16px;color:var(--text);
+  width:72px;font-family:var(--vt);font-size:16px;color:var(--text);
   background:var(--bg);border:2px solid var(--bd2);padding:2px 5px;
-  outline:none;text-align:right;
+  outline:none;text-align:right;flex-shrink:0;
 }
-.del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0 2px;}
+.del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;padding:0 3px;flex-shrink:0;}
 .del-btn:hover{color:var(--hot);}
 .btn-add{
   background:none;border:2px dashed var(--border);color:var(--text2);
@@ -263,7 +242,7 @@ input[type=range]::-webkit-slider-thumb{
   cursor:pointer;width:100%;margin-top:5px;
 }
 .btn-add:hover{border-color:var(--hot);color:var(--hot);}
-.ms-sfx{font-family:var(--vt);font-size:15px;color:var(--text3);white-space:nowrap;}
+.ms-sfx{font-family:var(--vt);font-size:15px;color:var(--text3);white-space:nowrap;flex-shrink:0;}
 
 /* notes */
 .notes-panel{border:2px solid var(--border);background:var(--bg);padding:12px;}
@@ -271,48 +250,30 @@ input[type=range]::-webkit-slider-thumb{
 .notes-text{font-family:var(--vt);font-size:16px;color:var(--text2);line-height:1.6;}
 
 /* ── TIMERS ── */
-.timers-wrap{display:grid;grid-template-columns:1fr 220px;gap:10px;}
-.t-hdrs{
-  display:grid;grid-template-columns:42px 1fr 86px 76px 40px 20px;
-  gap:3px;padding:0 3px;margin-bottom:4px;
-}
-.t-hdr{font-family:var(--vt);font-size:15px;letter-spacing:1px;color:var(--text2);text-transform:uppercase;}
-.t-row{
-  display:grid;grid-template-columns:42px 1fr 86px 76px 40px 20px;
-  gap:5px;align-items:center;padding:5px 6px;
-  border:1px solid var(--border);margin-bottom:4px;background:var(--panel);
-}
-.t-key{
-  background:var(--bg);border:2px solid var(--bd2);color:var(--hot);
-  font-family:var(--px);font-size:8px;text-align:center;
-  padding:4px 2px;width:100%;outline:none;appearance:none;-webkit-appearance:none;
-}
+.t-hdr{font-family:var(--vt);font-size:14px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;}
 .t-name{
   background:transparent;border:none;border-bottom:1px solid var(--border);
-  color:var(--text);font-family:var(--vt);font-size:16px;
-  padding:2px 4px;outline:none;width:100%;
+  color:var(--text);font-family:var(--vt);font-size:16px;padding:2px 4px;outline:none;width:100%;
 }
 .t-name:focus{border-bottom-color:var(--hot);}
-.t-every{
-  background:var(--bg);border:2px solid var(--bd2);color:var(--text);
-  font-family:var(--vt);font-size:15px;padding:2px 5px;
-  outline:none;width:100%;appearance:none;-webkit-appearance:none;
-}
 
 /* ── TIMELINE ── */
-.tl-wrap{display:grid;grid-template-columns:1fr 220px;gap:10px;}
-.tl-scale{position:relative;height:15px;margin-bottom:3px;}
-.tl-tick{position:absolute;top:0;font-family:var(--vt);font-size:15px;color:var(--text3);}
-.tl-bar{
-  position:relative;height:34px;background:var(--bg);
-  border:2px solid var(--bd2);overflow:hidden;margin-bottom:5px;
-}
-.tl-timers{position:relative;height:22px;margin-bottom:8px;}
-.tl-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
-.stat-box{background:var(--bg);border:2px solid var(--border);padding:10px;}
-.stat-lbl{font-family:var(--vt);font-size:15px;color:var(--text2);letter-spacing:1px;margin-bottom:2px;text-transform:uppercase;}
-.stat-val{font-family:var(--px);font-size:11px;color:var(--hot);}
-.conflicts{border:2px solid var(--border);background:var(--bg);padding:9px;}
+.tl-total{font-family:var(--px);font-size:14px;color:var(--hot);letter-spacing:2px;margin-bottom:8px;}
+.tl-bar{position:relative;height:38px;background:var(--bg);border:2px solid var(--bd2);overflow:hidden;margin-bottom:4px;}
+.tl-labels{display:flex;margin-bottom:10px;min-height:18px;}
+.tl-lbl{font-family:var(--vt);font-size:13px;color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;padding:0 2px;flex-shrink:0;}
+.tl-breakdown{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}
+.tl-brow{display:grid;grid-template-columns:90px 50px 1fr 36px;align-items:center;gap:6px;}
+.tl-brow-lbl{font-family:var(--vt);font-size:15px;color:var(--text2);}
+.tl-brow-val{font-family:var(--vt);font-size:15px;color:var(--text);}
+.tl-brow-bar{height:8px;background:var(--bg2);}
+.tl-brow-pct{font-family:var(--vt);font-size:14px;color:var(--text3);text-align:right;}
+.tl-sect-title{font-family:var(--px);font-size:8px;color:var(--text3);letter-spacing:1px;margin-bottom:6px;}
+.tl-buff-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);}
+.tl-buff-key{font-family:var(--vt);font-size:18px;background:#1e1e1e;border:2px solid #444;border-bottom:3px solid #000;padding:1px 8px;color:#fff;min-width:32px;text-align:center;}
+.tl-buff-info{font-family:var(--vt);font-size:15px;color:var(--text2);flex:1;}
+.tl-buff-warn{font-family:var(--vt);font-size:13px;color:#e06c75;}
+.conflicts{border:2px solid var(--border);background:var(--bg);padding:9px;margin-top:8px;}
 .conf-title{font-family:var(--px);font-size:8px;color:var(--hot);letter-spacing:1px;margin-bottom:7px;}
 .conf-item{font-family:var(--vt);font-size:15px;margin-bottom:3px;display:flex;gap:5px;}
 .c-ok{color:var(--green);}
@@ -350,9 +311,10 @@ input[type=range]::-webkit-slider-thumb{
 ::-webkit-scrollbar-track{background:var(--bg2);}
 ::-webkit-scrollbar-thumb{background:var(--border);}
 
-/* seq dragging */
-.seq-row.dragging{opacity:.45;}
+/* row dragging */
+.seq-row.dragging{opacity:.35;}
 .seq-row.drag-over{outline:2px dashed var(--hot);}
+/* mouse skill rows */
 </style>
 </head>
 <body>
@@ -365,7 +327,6 @@ input[type=range]::-webkit-slider-thumb{
     <button class="icon-btn" onclick="newProfile()">+</button>
   </div>
   <div class="profile-list" id="profile-list"></div>
-  <button class="btn-new-p" onclick="newProfile()">+ NEW PROFILE</button>
   <div class="p-summary">
     <div class="p-sum-title">PROFILE SUMMARY</div>
     <div class="sum-row"><span>Loop Time</span><span class="sum-val" id="sum-loop">—</span></div>
@@ -393,6 +354,8 @@ input[type=range]::-webkit-slider-thumb{
   </header>
 
   <div class="sections">
+    <div class="sections-inner">
+    <div class="sections-left">
 
     <!-- 1. CORE SETTINGS -->
     <div class="sec">
@@ -401,7 +364,7 @@ input[type=range]::-webkit-slider-thumb{
         <button class="help-btn">?</button>
       </div>
       <div class="sec-body">
-        <div class="f-grid" style="grid-template-columns:155px 155px 155px 1fr;">
+        <div class="f-grid" style="grid-template-columns:155px 1fr;">
           <div>
             <label class="f-lbl">TRIGGER BUTTON</label>
             <div class="sel-w" style="width:100%;">
@@ -418,28 +381,6 @@ input[type=range]::-webkit-slider-thumb{
               <span class="sel-arr">▼</span>
             </div>
             <div class="f-hint">Key that starts<br>the macro.</div>
-          </div>
-          <div>
-            <label class="f-lbl">RUNTIME LIMIT (SEC)</label>
-            <div class="spinbox" style="width:100%;">
-              <input type="number" id="maxRuntime" value="0" min="0" step="1" style="width:100%;">
-              <div class="sp-btns">
-                <button class="sp-btn" onclick="spin('maxRuntime',1)">▲</button>
-                <button class="sp-btn" onclick="spin('maxRuntime',-1)">▼</button>
-              </div>
-            </div>
-            <div class="f-hint">0 = No time limit.</div>
-          </div>
-          <div>
-            <label class="f-lbl">LOOP LIMIT</label>
-            <div class="spinbox" style="width:100%;">
-              <input type="number" id="maxLoops" value="0" min="0" step="1" style="width:100%;">
-              <div class="sp-btns">
-                <button class="sp-btn" onclick="spin('maxLoops',1)">▲</button>
-                <button class="sp-btn" onclick="spin('maxLoops',-1)">▼</button>
-              </div>
-            </div>
-            <div class="f-hint">0 = Infinite loops.</div>
           </div>
           <div>
             <label class="f-lbl">HUMANIZATION (JITTER)</label>
@@ -492,13 +433,7 @@ input[type=range]::-webkit-slider-thumb{
           </div>
           <div>
             <label class="f-lbl">DIRECTION CHANGE (MS)</label>
-            <div class="spinbox">
-              <input type="number" id="walkChange" value="600" min="100" step="100">
-              <div class="sp-btns">
-                <button class="sp-btn" onclick="spin('walkChange',100)">▲</button>
-                <button class="sp-btn" onclick="spin('walkChange',-100)">▼</button>
-              </div>
-            </div>
+            <input type="number" id="walkChange" value="600" min="100" step="100" style="width:100%;">
             <div class="f-hint">How often to change<br>direction.</div>
           </div>
           <div>
@@ -515,23 +450,8 @@ input[type=range]::-webkit-slider-thumb{
               <button class="dir-btn active" id="dir-sd" onclick="toggleDir('sd')">SD</button>
             </div>
           </div>
-          <div>
-            <label class="f-lbl">DIRECTION WEIGHTS</label>
-            <div class="wbar-wrap">
-              <div class="w-row">
-                <span class="w-lbl">Cardinal</span>
-                <div class="wbar-track" id="wbar-cardinal" onclick="clickWbar('cardinal',event)"></div>
-                <span class="w-num" id="wnum-cardinal">2</span>
-                <input type="hidden" id="weightCardinal" value="2">
-              </div>
-              <div class="w-row">
-                <span class="w-lbl">Diagonal</span>
-                <div class="wbar-track" id="wbar-diagonal" onclick="clickWbar('diagonal',event)"></div>
-                <span class="w-num" id="wnum-diagonal">1</span>
-                <input type="hidden" id="weightDiagonal" value="1">
-              </div>
-            </div>
-          </div>
+          <input type="hidden" id="weightCardinal" value="2">
+          <input type="hidden" id="weightDiagonal" value="1">
           </div><!-- /#move-kb-fields -->
         </div>
         <!-- Mouse move options -->
@@ -562,41 +482,38 @@ input[type=range]::-webkit-slider-thumb{
         <button class="help-btn">?</button>
       </div>
       <div class="sec-body" style="padding:8px;">
-        <div class="rot-panels">
-          <div class="rot-panel">
-            <div class="rot-hdr"><span class="rot-title">MAIN ROTATION</span></div>
-            <div class="rot-body">
-              <div id="seq-list"></div>
-              <button class="btn-add" onclick="addSeqRow()">+ ADD ACTION</button>
-            </div>
-          </div>
-          <div class="rot-panel">
-            <div class="rot-hdr">
-              <span class="rot-title">+ MOUSE TARGET SKILLS</span>
-              <button class="collapse-btn" id="ms-collapse-btn" onclick="toggleMsPanel()">∧</button>
-            </div>
-            <div class="rot-body" id="ms-panel-body">
-              <div id="mouse-skill-list"></div>
-              <button class="btn-add" onclick="addMouseSkillRow()">+ ADD ACTION</button>
-            </div>
-          </div>
-          <div class="notes-panel">
-            <div class="notes-title">NOTES</div>
-            <div class="notes-text">
-              Rotation runs in order from top to bottom.<br><br>
-              Delays are added between each action.<br><br>
-              The last action will loop back to the first.
-            </div>
-          </div>
-        </div>
+        <div id="seq-list"></div>
+        <button class="btn-add" onclick="addSeqRow()">+ ADD ACTION</button>
         <!-- hidden sequence options -->
         <div style="display:none;">
           <select id="seqMode"><option value="after" selected>after</option><option value="during">during</option></select>
           <input type="number" id="seqCooldown" value="500">
-          <input type="number" id="mouseSkillArea" value="50">
-          <input type="number" id="screenW2" value="2560">
-          <input type="number" id="screenH2" value="1440">
         </div>
+      </div>
+    </div>
+
+    <!-- 3.5. MOUSE SKILLS -->
+    <div class="sec">
+      <div class="sec-hdr">
+        <span class="sec-title">&#x1F5B1; MOUSE SKILLS <span id="ms-count" style="font-family:var(--vt);font-size:16px;color:#888;"></span></span>
+      </div>
+      <div class="sec-body" style="padding:10px;">
+        <div style="font-family:var(--vt);font-size:14px;color:#666;margin-bottom:10px;">FIRES AFTER MAIN SEQUENCE. MOVES CURSOR TO RANDOM POSITION, PRESSES KEY, THEN RECENTERS.</div>
+        <div class="f-grid" style="grid-template-columns:130px 1fr;gap:6px 14px;margin-bottom:10px;">
+          <label class="f-lbl">SCREEN WIDTH</label>
+          <input type="number" id="screenW2" value="2560" style="width:100%;">
+          <label class="f-lbl">SCREEN HEIGHT</label>
+          <input type="number" id="screenH2" value="1440" style="width:100%;">
+          <label class="f-lbl">CLICK AREA</label>
+          <div class="sl-wrap">
+            <input type="range" id="mouseSkillArea" min="10" max="100" value="50"
+              oninput="document.getElementById('msAreaVal').textContent=this.value+'%'">
+            <span class="sl-val" id="msAreaVal">50%</span>
+          </div>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:8px 0;">
+        <div id="mouse-skill-list"></div>
+        <button class="btn-add" onclick="addMouseSkillRow()">+ ADD MOUSE SKILL</button>
       </div>
     </div>
 
@@ -607,57 +524,27 @@ input[type=range]::-webkit-slider-thumb{
         <button class="help-btn">?</button>
       </div>
       <div class="sec-body" style="padding:8px;">
-        <div class="timers-wrap">
-          <div>
-            <div class="t-hdrs">
-              <span class="t-hdr">KEY</span>
-              <span class="t-hdr">ACTION / SKILL</span>
-              <span class="t-hdr">EVERY</span>
-              <span class="t-hdr">OFFSET</span>
-              <span class="t-hdr">ENABLED</span>
-              <span></span>
-            </div>
-            <div id="buff-list"></div>
-            <button class="btn-add" onclick="addBuffRow()" style="margin-top:5px;">+ ADD TIMER</button>
-          </div>
-          <div class="notes-panel">
-            <div class="notes-title">NOTES</div>
-            <div class="notes-text">
-              Timers run independently of the main rotation. They will trigger when the time is reached.
-            </div>
-          </div>
-        </div>
+        <div id="buff-list"></div>
+        <button class="btn-add" onclick="addBuffRow()">+ ADD TIMER</button>
       </div>
     </div>
 
+    </div><!-- /.sections-left -->
+    <div class="sections-right">
+
     <!-- 5. PREVIEW TIMELINE -->
     <div class="sec">
-      <div class="sec-hdr"><span class="sec-title">5. PREVIEW TIMELINE</span></div>
-      <div class="sec-body" style="padding:8px;">
-        <div class="tl-wrap">
-          <div>
-            <div class="tl-scale" id="tl-scale"></div>
-            <div class="tl-timers" id="tl-timers"></div>
-            <div class="tl-bar" id="tl-bar"></div>
-            <div class="tl-stats">
-              <div class="stat-box">
-                <div class="stat-lbl">ESTIMATED LOOP TIME</div>
-                <div class="stat-val" id="stat-loop">—</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-lbl">ACTIONS PER LOOP</div>
-                <div class="stat-val" id="stat-acts">—</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-lbl">TIMERS ACTIVE</div>
-                <div class="stat-val" id="stat-tmrs">—</div>
-              </div>
-            </div>
-          </div>
-          <div class="conflicts">
-            <div class="conf-title">- CONFLICTS / WARNINGS</div>
-            <div id="conf-list"></div>
-          </div>
+      <div class="sec-hdr"><span class="sec-title">5. LOOP PREVIEW</span></div>
+      <div class="sec-body" style="padding:8px 10px;">
+        <div class="tl-total" id="tl-total">— SEC / LOOP</div>
+        <div class="tl-bar" id="tl-bar"></div>
+        <div class="tl-labels" id="tl-labels"></div>
+        <div class="tl-breakdown" id="tl-breakdown"></div>
+        <div class="tl-sect-title" id="tl-buff-title" style="display:none;">BUFF TIMERS</div>
+        <div id="tl-buffs"></div>
+        <div class="conflicts">
+          <div class="conf-title">- WARNINGS</div>
+          <div id="conf-list"></div>
         </div>
       </div>
     </div>
@@ -671,15 +558,18 @@ input[type=range]::-webkit-slider-thumb{
       <div class="sec-body" style="padding:8px 10px;">
         <div style="font-family:var(--vt);font-size:15px;color:#666;margin-bottom:8px;">PASTE ONCE IN G HUB — SAVE UPDATES .LUA AUTOMATICALLY.</div>
         <label style="font-family:var(--vt);font-size:14px;color:#888;display:block;margin-bottom:3px;">MACRO DIRECTORY PATH:</label>
-        <input type="text" id="loader-path-input" oninput="updateLoaderInline()" placeholder="C:\MacroTool\" style="width:100%;font-family:var(--vt);font-size:16px;padding:5px 9px;background:#eee;border:2px solid #888;color:#222;box-sizing:border-box;margin-bottom:6px;">
+        <input type="text" id="loader-path-input" oninput="updateLoaderInline();document.getElementById('loader-path-err').style.display='none';" placeholder="C:\MacroTool\" style="width:100%;font-family:var(--vt);font-size:16px;padding:5px 9px;background:#eee;border:2px solid #888;color:#222;box-sizing:border-box;margin-bottom:3px;">
+        <div id="loader-path-err" style="display:none;font-family:var(--vt);font-size:15px;color:#e06c75;margin-bottom:6px;">⚠ ENTER DIRECTORY PATH BEFORE COPYING</div>
         <div style="display:flex;justify-content:space-between;align-items:center;background:#ddd;border:2px solid #888;padding:5px 9px;margin-bottom:4px;">
           <span id="loader-fn-display" style="font-family:var(--vt);font-size:15px;color:#888;">— save a .lua file first —</span>
-          <button class="btn" onclick="copyLoaderInline()" style="font-size:7px;padding:5px 9px;">[COPY]</button>
+          <button class="btn" onclick="copyLoaderInline()" style="padding:4px 10px;">COPY</button>
         </div>
         <pre id="loader-inline-out" style="background:#222;border:2px solid #888;color:#aaa;font-family:'Courier New',monospace;font-size:12px;padding:11px;overflow-x:auto;white-space:pre;line-height:1.5;">-- save a .lua file to generate loader code</pre>
       </div>
     </div>
 
+    </div><!-- /.sections-right -->
+    </div><!-- /.sections-inner -->
   </div><!-- /.sections -->
 </div><!-- /.main-col -->
 </div><!-- /.app -->
@@ -696,7 +586,6 @@ const EVERY_OPTS  = [5,10,15,20,30,45,60,90,120,180,300];
 const OFFSET_OPTS = [0,1,2,3,5,10,15,20,30];
 const COLORS = ['#c84','#48c','#a44','#4a4','#88c','#ca4','#4ca','#c48','#84c','#ac4'];
 const P_ICONS = ['🌾','⚔','🏠','⛏','🎣','🗡','🏹','🛡','✨','💀'];
-const MAX_W = 10;
 
 // ── PROFILES ──────────────────────────────────
 let profiles = [];
@@ -725,13 +614,17 @@ function seqMs(rows) {
   return ms;
 }
 
+function msSkillMs(rows) {
+  return (rows||[]).reduce((s,r)=>s+(r.hold||500)+(r.delay||50),0);
+}
+
 function loopMs(p) {
-  const walkAvg = ((p.walk?.min||1500) + (p.walk?.max||2500)) / 2;
-  return Math.round(walkAvg + seqMs(p.sequence?.rows));
+  const walkAvg = p.walk?.mode==='off' ? 0 : ((p.walk?.min||1500) + (p.walk?.max||2500)) / 2;
+  return Math.round(walkAvg + seqMs(p.sequence?.rows) + msSkillMs(p.mouseSkills));
 }
 
 function profSummary(p) {
-  const acts   = p.sequence?.rows?.length || 0;
+  const acts   = (p.sequence?.rows?.length||0) + (p.mouseSkills?.length||0);
   const timers = (p.buffs||[]).filter(b=>b.enabled!==false).length;
   const ms     = loopMs(p);
   const loop   = ms > 0 ? (ms/1000).toFixed(1)+'s' : '—';
@@ -746,11 +639,11 @@ function renderProfiles() {
     const s = profSummary(p);
     const c = document.createElement('div');
     c.className = 'p-card' + (i===activeIdx?' active':'');
-    c.innerHTML = `<div class="p-icon">${p.icon||'🌾'}</div>
-      <div style="min-width:0;">
-        <div class="p-name">${p.name}</div>
+    c.innerHTML = `<div style="min-width:0;flex:1;">
+        <div class="p-name">${p.name}${i===activeIdx?' ◀':''}</div>
         <div class="p-meta">${s.acts} Skills<br>${s.timers} Buff${s.timers!==1?'s':''}<br>Loop ${s.loop}<br>${s.mode}</div>
-      </div>`;
+      </div>
+      ${profiles.length>1?`<button class="p-del" onclick="event.stopPropagation();deleteProfile(${i})">×</button>`:''}`;
     c.onclick = () => switchProfile(i);
     el.appendChild(c);
   });
@@ -765,6 +658,16 @@ function switchProfile(i) {
 
 function saveCurrentProfile() {
   if (profiles[activeIdx]) profiles[activeIdx] = {...profiles[activeIdx], ...getConfig()};
+}
+
+function deleteProfile(i) {
+  if (profiles.length <= 1) return;
+  if (!confirm(`Delete "${profiles[i].name}"?`)) return;
+  profiles.splice(i, 1);
+  activeIdx = Math.min(activeIdx, profiles.length - 1);
+  applyConfig(profiles[activeIdx]);
+  renderProfiles();
+  saveProfiles();
 }
 
 function newProfile() {
@@ -804,12 +707,6 @@ function updateSummary() {
 }
 
 // ── HELPERS ──────────────────────────────────
-function spin(id, d) {
-  const el = document.getElementById(id);
-  const mn = +(el.min??-Infinity), st = +(el.step||1);
-  el.value = Math.max(mn, +el.value + d*st);
-}
-
 // ── DIRECTION ─────────────────────────────────
 const dirState = {w:true,a:true,s:true,d:true,wa:true,wd:true,sa:true,sd:true};
 function toggleDir(d) {
@@ -817,25 +714,6 @@ function toggleDir(d) {
   document.getElementById('dir-'+d).classList.toggle('active', dirState[d]);
 }
 
-// ── WEIGHT BAR ────────────────────────────────
-function renderWbar(name, val) {
-  const tr = document.getElementById('wbar-'+name); if (!tr) return;
-  tr.innerHTML = '';
-  for (let i=0;i<MAX_W;i++) {
-    const c=document.createElement('div');
-    c.className='wbar-cell'+(i<val?' on':'');
-    tr.appendChild(c);
-  }
-}
-function clickWbar(name, e) {
-  const tr = document.getElementById('wbar-'+name);
-  const pct = (e.clientX - tr.getBoundingClientRect().left) / tr.offsetWidth;
-  const val = Math.max(1, Math.round(pct * MAX_W));
-  const cap = name.charAt(0).toUpperCase()+name.slice(1);
-  document.getElementById('weight'+cap).value = val;
-  document.getElementById('wnum-'+name).textContent = val;
-  renderWbar(name, val);
-}
 
 // ── MOVE MODE ─────────────────────────────────
 function updateMoveMode() {
@@ -844,7 +722,7 @@ function updateMoveMode() {
   const isMouse = mode === 'mouse';
   document.getElementById('move-kb-fields').style.display = isOff ? 'none' : 'contents';
   document.getElementById('mouse-move-opts').style.display = isMouse ? '' : 'none';
-  updateSummary();
+  updateTimeline();
 }
 
 // ── MOUSE SKILL COLLAPSE ──────────────────────
@@ -855,11 +733,24 @@ function toggleMsPanel() {
   document.getElementById('ms-collapse-btn').textContent = msCollapsed?'∨':'∧';
 }
 
+// ── DRAG HELPER ───────────────────────────────
+function attachDrag(el, idx, arr, renderFn) {
+  el.addEventListener('dragstart', () => { el._drag=idx; el.classList.add('dragging'); });
+  el.addEventListener('dragend',   () => { el.classList.remove('dragging'); renderFn(); });
+  el.addEventListener('dragover',  e => { e.preventDefault(); el.classList.add('drag-over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+  el.addEventListener('drop', e => {
+    e.preventDefault(); el.classList.remove('drag-over');
+    const from = document.querySelector('.seq-row.dragging')?._drag;
+    if (from != null && from !== idx) { arr.splice(idx,0,arr.splice(from,1)[0]); renderFn(); updateTimeline(); }
+  });
+}
+
 // ── SEQUENCE ROWS ─────────────────────────────
-let seqRows = [], seqDrag = null;
+let seqRows = [];
 
 function addSeqRow(data) {
-  seqRows.push(data||{action:'q',delay:300,hold:50,repeat:1});
+  seqRows.push(data||{action:'q',delay:50,hold:500,repeat:1});
   renderSeqList(); updateTimeline(); updateSummary();
 }
 function removeSeqRow(i) {
@@ -870,7 +761,6 @@ function buildActionOpts(val) {
   const kOpts = VALID_KEYS.map(k=>`<option value="${k}"${val===k?' selected':''}>${k.toUpperCase()}</option>`).join('');
   return kOpts +
     `<option value="wait"${val==='wait'?' selected':''}>WAIT</option>` +
-    `<option value="mouse_skill"${val==='mouse_skill'?' selected':''}>MOUSE SKILL</option>` +
     `<option value="mouse_drift"${val==='mouse_drift'?' selected':''}>CURSOR DRIFT</option>` +
     `<option value="recenter"${val==='recenter'?' selected':''}>RECENTER</option>`;
 }
@@ -878,40 +768,38 @@ function buildActionOpts(val) {
 function renderSeqList() {
   const list = document.getElementById('seq-list');
   list.innerHTML = '';
-  seqRows.forEach((row,i) => {
-    const isKey  = VALID_KEYS.includes(row.action);
-    const isWait = row.action==='wait';
-    const hasMs  = isKey||isWait||row.action==='mouse_skill';
-    const wrap   = document.createElement('div');
-    wrap.className = 'seq-row'; wrap.draggable = true;
+  seqRows.forEach((row, i) => {
+    const isKey = VALID_KEYS.includes(row.action);
+    const isWait = row.action === 'wait';
+    const hasMs = isKey || isWait || row.action === 'mouse_skill';
+    const wrap = document.createElement('div');
+    wrap.className = 'seq-row'; wrap.draggable = true; wrap._drag = i;
+    wrap.style.borderLeftColor = COLORS[i % COLORS.length];
     wrap.innerHTML = `
       <span class="drag-handle">⠿</span>
-      <div class="icon-slot" style="background:${COLORS[i%COLORS.length]};"></div>
       <select class="seq-key-sel">${buildActionOpts(row.action)}</select>
-      <div style="display:flex;align-items:center;gap:2px;">
+      <div class="seq-spacer"></div>
+      <div style="display:flex;align-items:center;gap:3px;">
+        <span class="ms-sfx" style="font-size:13px;color:#999;">hold</span>
+        <input type="number" class="seq-ms" value="${row.hold||50}" min="25" step="25"
+          ${!isKey?'disabled style="opacity:.3;"':''}
+          onchange="seqRows[${i}].hold=+this.value;updateTimeline();">
+        <span class="ms-sfx">ms</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:3px;margin-left:6px;">
+        <span class="ms-sfx" style="font-size:13px;color:#999;">delay</span>
         <input type="number" class="seq-ms" value="${row.delay||0}" min="0" step="50"
           ${!hasMs?'disabled style="opacity:.3;"':''}
           onchange="seqRows[${i}].delay=+this.value;updateTimeline();">
         <span class="ms-sfx">ms</span>
       </div>
-      <button class="del-btn" onclick="removeSeqRow(${i})">&#x2715;</button>`;
-    wrap.addEventListener('dragstart',()=>{seqDrag=i;wrap.classList.add('dragging');});
-    wrap.addEventListener('dragend',()=>{wrap.classList.remove('dragging');seqDrag=null;renderSeqList();});
-    wrap.addEventListener('dragover',e=>{e.preventDefault();wrap.classList.add('drag-over');});
-    wrap.addEventListener('dragleave',()=>wrap.classList.remove('drag-over'));
-    wrap.addEventListener('drop',e=>{
-      e.preventDefault();wrap.classList.remove('drag-over');
-      if(seqDrag!==null&&seqDrag!==i){
-        seqRows.splice(i,0,seqRows.splice(seqDrag,1)[0]);
-        renderSeqList();updateTimeline();
-      }
-    });
+      <button class="del-btn" onclick="removeSeqRow(${i})">×</button>`;
+    attachDrag(wrap, i, seqRows, renderSeqList);
     const sel = wrap.querySelector('select');
     sel.value = row.action;
-    sel.addEventListener('change',function(){
-      seqRows[i].action=this.value;
-      if(this.value==='mouse_skill'&&!seqRows[i].skillKey)seqRows[i].skillKey='q';
-      renderSeqList();updateTimeline();
+    sel.addEventListener('change', function() {
+      seqRows[i].action = this.value;
+      renderSeqList(); updateTimeline();
     });
     list.appendChild(wrap);
   });
@@ -921,7 +809,7 @@ function renderSeqList() {
 let buffRows = [];
 
 function addBuffRow(data) {
-  buffRows.push(data||{key:'8',name:'Buff Skill',interval:15,offset:0,preLockout:2,postDelay:500,enabled:true});
+  buffRows.push(data||{key:'8',interval:5,hold:100,delay:500,preLockout:2,postDelay:500});
   renderBuffList(); updateTimeline(); updateSummary();
 }
 function removeBuffRow(i) {
@@ -931,26 +819,34 @@ function removeBuffRow(i) {
 function renderBuffList() {
   const list = document.getElementById('buff-list');
   list.innerHTML = '';
-  buffRows.forEach((row,i) => {
+  buffRows.forEach((row, i) => {
     const kOpts = VALID_KEYS.map(k=>`<option value="${k}"${row.key===k?' selected':''}>${k.toUpperCase()}</option>`).join('');
-    const eOpts = EVERY_OPTS.map(s=>`<option value="${s}"${row.interval===s?' selected':''}>${s} sec</option>`).join('');
-    const oOpts = OFFSET_OPTS.map(s=>`<option value="${s}"${(row.offset||0)===s?' selected':''}>${s} sec</option>`).join('');
-    const div   = document.createElement('div');
-    div.className = 't-row';
+    const div = document.createElement('div');
+    div.className = 'seq-row';
+    div.style.borderLeftColor = COLORS[i % COLORS.length];
     div.innerHTML = `
-      <select class="t-key" onchange="buffRows[${i}].key=this.value;">${kOpts}</select>
-      <div style="display:flex;align-items:center;gap:5px;">
-        <div style="width:16px;height:16px;background:${COLORS[i%COLORS.length]};flex-shrink:0;"></div>
-        <input class="t-name" type="text" value="${row.name||'Buff Skill'}" onchange="buffRows[${i}].name=this.value;">
+      <select class="seq-key-sel" onchange="buffRows[${i}].key=this.value;">${kOpts}</select>
+      <input class="t-name" type="text" value="${row.name||''}" placeholder="NAME"
+        onchange="buffRows[${i}].name=this.value;" style="flex:1;min-width:60px;">
+      <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
+        <span class="ms-sfx" style="font-size:13px;color:#999;">hold</span>
+        <input type="number" class="seq-ms" value="${row.hold||100}" min="25" step="25"
+          onchange="buffRows[${i}].hold=+this.value;">
+        <span class="ms-sfx">ms</span>
       </div>
-      <select class="t-every" onchange="buffRows[${i}].interval=+this.value;updateTimeline();">${eOpts}</select>
-      <select class="t-every" onchange="buffRows[${i}].offset=+this.value;updateTimeline();">${oOpts}</select>
-      <label class="toggle">
-        <input type="checkbox" ${row.enabled!==false?'checked':''}
-          onchange="buffRows[${i}].enabled=this.checked;updateTimeline();updateSummary();">
-        <div class="tgl-track"><div class="tgl-thumb"></div></div>
-      </label>
-      <button class="del-btn" onclick="removeBuffRow(${i})">&#x2715;</button>`;
+      <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
+        <span class="ms-sfx" style="font-size:13px;color:#999;">delay</span>
+        <input type="number" class="seq-ms" value="${row.delay||500}" min="0" step="50"
+          onchange="buffRows[${i}].delay=+this.value;">
+        <span class="ms-sfx">ms</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
+        <span class="ms-sfx" style="font-size:13px;color:#999;">every</span>
+        <input type="number" class="seq-ms" value="${row.interval||5}" min="0.5" step="0.5"
+          onchange="buffRows[${i}].interval=+this.value;updateTimeline();">
+        <span class="ms-sfx">min</span>
+      </div>
+      <button class="del-btn" onclick="removeBuffRow(${i})">×</button>`;
     list.appendChild(div);
   });
 }
@@ -959,7 +855,7 @@ function renderBuffList() {
 let mouseSkillRows = [];
 
 function addMouseSkillRow(data) {
-  mouseSkillRows.push(data||{key:'LMB',delay:300,repeat:1});
+  mouseSkillRows.push(data||{key:'LMB',hold:500,delay:50});
   renderMsList(); updateTimeline();
 }
 function removeMouseSkillRow(i) {
@@ -968,99 +864,140 @@ function removeMouseSkillRow(i) {
 
 function renderMsList() {
   const list = document.getElementById('mouse-skill-list');
+  if (!list) return;
   list.innerHTML = '';
-  mouseSkillRows.forEach((row,i) => {
+  const cnt = document.getElementById('ms-count');
+  if (cnt) cnt.textContent = mouseSkillRows.length ? mouseSkillRows.length+' SKILL'+(mouseSkillRows.length!==1?'S':'') : '';
+  mouseSkillRows.forEach((row, i) => {
     const opts = [...VALID_KEYS,...MOUSE_BTNS].map(k=>
       `<option value="${k}"${row.key===k?' selected':''}>${k.toUpperCase()}</option>`).join('');
     const div = document.createElement('div');
-    div.className = 'seq-row';
+    div.className = 'seq-row'; div.draggable = true; div._drag = i;
+    div.style.borderLeftColor = COLORS[(i+5) % COLORS.length];
     div.innerHTML = `
       <span class="drag-handle">⠿</span>
-      <div class="icon-slot" style="background:${COLORS[(i+5)%COLORS.length]};"></div>
-      <select class="seq-key-sel" onchange="mouseSkillRows[${i}].key=this.value;">${opts}</select>
-      <div style="display:flex;align-items:center;gap:2px;">
-        <input type="number" class="seq-ms" value="${row.delay||300}" min="0" step="50"
+      <select class="seq-key-sel">${opts}</select>
+      <div class="seq-spacer"></div>
+      <div style="display:flex;align-items:center;gap:3px;">
+        <span class="ms-sfx" style="font-size:13px;color:#999;">hold</span>
+        <input type="number" class="seq-ms" value="${row.hold||500}" min="25" step="25"
+          onchange="mouseSkillRows[${i}].hold=+this.value;">
+        <span class="ms-sfx">ms</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:3px;margin-left:6px;">
+        <span class="ms-sfx" style="font-size:13px;color:#999;">delay</span>
+        <input type="number" class="seq-ms" value="${row.delay||50}" min="0" step="50"
           onchange="mouseSkillRows[${i}].delay=+this.value;updateTimeline();">
         <span class="ms-sfx">ms</span>
       </div>
-      <button class="del-btn" onclick="removeMouseSkillRow(${i})">&#x2715;</button>`;
+      <button class="del-btn" onclick="removeMouseSkillRow(${i})">×</button>`;
+    attachDrag(div, i, mouseSkillRows, renderMsList);
+    const sel = div.querySelector('select');
+    sel.value = row.key;
+    sel.addEventListener('change', function() {
+      mouseSkillRows[i].key = this.value;
+    });
     list.appendChild(div);
   });
 }
 
 // ── TIMELINE ──────────────────────────────────
-const TL_SECS = 10;
 const ACT_COLORS = ['#d4843a','#3a8cd4','#d43a3a','#3ab43a','#8c3ad4','#d4c83a','#3ad4c8','#d43ac8'];
 
 function updateTimeline() {
   const cfg    = getConfig();
-  const wAvg   = (cfg.walk.min + cfg.walk.max) / 2;
-  const sMs    = seqMs(cfg.sequence.rows);
-  const total  = TL_SECS * 1000;
+  const wAvg  = cfg.walk.mode==='off' ? 0 : (cfg.walk.min + cfg.walk.max) / 2;
+  const sMs   = seqMs(cfg.sequence.rows);
+  const msMs  = cfg.mouseSkills.reduce((s,r)=>s+(r.hold||500)+(r.delay||50),0);
+  const lMs   = Math.round(wAvg + sMs + msMs);
+  const total = lMs || 1;
+
+  // header
+  document.getElementById('tl-total').textContent = (lMs/1000).toFixed(2)+' SEC / LOOP';
+
+  // build segments: walk + each seq row + each mouse skill
+  const segs = [];
+  segs.push({label:'WALK', ms:wAvg, color:'#666', alpha:1});
+  cfg.sequence.rows.forEach((row,i)=>{
+    const isKey = VALID_KEYS.includes(row.action);
+    const ms = (row.delay||0)+(isKey?(row.hold||50):0);
+    if (!ms) return;
+    segs.push({label: isKey?row.action.toUpperCase():(row.action==='wait'?'WAIT':row.action.replace('_',' ').toUpperCase()), ms, color:ACT_COLORS[i%ACT_COLORS.length], alpha:1});
+  });
+  cfg.mouseSkills.forEach((row,i)=>{
+    const ms = (row.hold||500)+(row.delay||50);
+    segs.push({label:'M:'+row.key.toUpperCase(), ms, color:ACT_COLORS[(i+4)%ACT_COLORS.length], alpha:.7});
+  });
 
   // bar
   const bar = document.getElementById('tl-bar');
   bar.innerHTML = '';
-  let elapsed = 0;
-
-  // walk block (gray)
-  const wEl = document.createElement('div');
-  wEl.style.cssText=`position:absolute;left:0;width:${Math.min(wAvg/total*100,100)}%;top:0;bottom:0;background:#888;opacity:.25;`;
-  bar.appendChild(wEl);
-  elapsed = wAvg;
-
-  // sequence blocks
-  cfg.sequence.rows.forEach((row,i) => {
-    const isKey  = VALID_KEYS.includes(row.action);
-    const isWait = row.action==='wait';
-    if (!isKey && !isWait) return;
-    const ms = (row.delay||0) + (isKey?(row.hold||50):0);
-    if (elapsed >= total) return;
-    const left = Math.min(elapsed/total*100,100);
-    const w    = Math.min(ms/total*100, 100-left);
-    const el   = document.createElement('div');
-    el.style.cssText=`position:absolute;left:${left}%;width:${w}%;top:0;bottom:0;background:${ACT_COLORS[i%ACT_COLORS.length]};`;
-    el.title=(isKey?row.action.toUpperCase():'WAIT')+' '+ms+'ms';
-    if (w>2.5) {
+  let pos = 0;
+  segs.forEach(seg=>{
+    const w = seg.ms/total*100;
+    const el = document.createElement('div');
+    el.style.cssText=`position:absolute;left:${pos}%;width:${w}%;top:0;bottom:0;background:${seg.color};opacity:${seg.alpha};`;
+    el.title=`${seg.label} — ${seg.ms}ms`;
+    if (w>3) {
       const lbl=document.createElement('span');
-      lbl.style.cssText=`font-family:'VT323',monospace;font-size:14px;color:#fff;position:absolute;left:2px;top:50%;transform:translateY(-50%);overflow:hidden;max-width:calc(100% - 4px);white-space:nowrap;`;
-      lbl.textContent=isKey?row.action.toUpperCase():'WAIT';
+      lbl.style.cssText=`font-family:'VT323',monospace;font-size:14px;color:#fff;position:absolute;left:2px;right:2px;top:50%;transform:translateY(-50%);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;`;
+      lbl.textContent=seg.label;
       el.appendChild(lbl);
     }
     bar.appendChild(el);
-    elapsed += ms;
+    pos += w;
   });
 
-  // scale
-  const sc = document.getElementById('tl-scale');
-  sc.innerHTML='';
-  for(let s=0;s<=TL_SECS;s+=2){
-    const t=document.createElement('span');
-    t.className='tl-tick';t.textContent=s+'s';
-    t.style.left=(s/TL_SECS*100)+'%';
-    sc.appendChild(t);
-  }
-
-  // timer markers
-  const tr = document.getElementById('tl-timers');
-  tr.innerHTML='';
-  cfg.buffs.forEach((b,i) => {
-    if(b.enabled===false) return;
-    const iMs = (b.interval||15)*1000;
-    const oMs = (b.offset||0)*1000;
-    for(let t=oMs;t<total;t+=iMs){
-      const m=document.createElement('div');
-      m.style.cssText=`position:absolute;left:calc(${t/total*100}% - 9px);width:18px;height:18px;background:${ACT_COLORS[(i+3)%ACT_COLORS.length]};display:flex;align-items:center;justify-content:center;`;
-      m.innerHTML=`<span style="font-family:'VT323',monospace;font-size:15px;color:#fff;">${b.key.toUpperCase()}</span>`;
-      tr.appendChild(m);
-    }
+  // labels below bar
+  const labelsEl = document.getElementById('tl-labels');
+  labelsEl.innerHTML='';
+  segs.forEach(seg=>{
+    const w = seg.ms/total*100;
+    const lbl = document.createElement('span');
+    lbl.className='tl-lbl';
+    lbl.style.cssText=`width:${w}%;color:${seg.color};`;
+    lbl.textContent=w>4?seg.label:'';
+    labelsEl.appendChild(lbl);
   });
 
-  // stats
-  const lMs = wAvg + sMs;
-  document.getElementById('stat-loop').textContent = (lMs/1000).toFixed(1)+' sec';
-  document.getElementById('stat-acts').textContent = cfg.sequence.rows.length;
-  document.getElementById('stat-tmrs').textContent = cfg.buffs.filter(b=>b.enabled!==false).length;
+  // breakdown rows
+  const bdEl = document.getElementById('tl-breakdown');
+  bdEl.innerHTML='';
+  const phases = [
+    {label:'WALK',    ms:wAvg, color:'#666'},
+    {label:'ROTATION',ms:sMs,  color:ACT_COLORS[0]},
+    {label:'MOUSE',   ms:msMs, color:ACT_COLORS[4]},
+  ];
+  phases.forEach(ph=>{
+    if (!ph.ms) return;
+    const pct = Math.round(ph.ms/total*100);
+    const row = document.createElement('div');
+    row.className='tl-brow';
+    row.innerHTML=`
+      <span class="tl-brow-lbl">${ph.label}</span>
+      <span class="tl-brow-val">${(ph.ms/1000).toFixed(2)}s</span>
+      <div class="tl-brow-bar"><div style="height:100%;width:${pct}%;background:${ph.color};"></div></div>
+      <span class="tl-brow-pct">${pct}%</span>`;
+    bdEl.appendChild(row);
+  });
+
+  // buffs list
+  const buffsEl = document.getElementById('tl-buffs');
+  buffsEl.innerHTML='';
+  const activeBufss = cfg.buffs.filter(b=>b.enabled!==false);
+  document.getElementById('tl-buff-title').style.display = activeBufss.length?'':'none';
+  activeBufss.forEach((b,i)=>{
+    const minVal = b.interval||5;
+    const intervalStr = Number.isInteger(minVal)?`${minVal}m`:`${minVal}m`;
+    const warn = lMs>0 && sec*1000 < lMs;
+    const row = document.createElement('div');
+    row.className='tl-buff-row';
+    row.innerHTML=`
+      <span class="tl-buff-key">${b.key.toUpperCase()}</span>
+      <span class="tl-buff-info">${b.name||b.key.toUpperCase()} — every ${intervalStr}</span>
+      ${warn?`<span class="tl-buff-warn">⚠ < loop</span>`:''}`;
+    buffsEl.appendChild(row);
+  });
 
   renderConflicts(cfg, lMs);
   updateSummary();
@@ -1070,19 +1007,19 @@ function renderConflicts(cfg, lMs) {
   const el = document.getElementById('conf-list');
   el.innerHTML='';
   const issues=[];
-  if(!cfg.sequence.rows.length) issues.push({w:true,msg:'No rotation actions configured.'});
-  cfg.buffs.forEach(b=>{
-    if(b.enabled===false) return;
-    if((b.interval||15)*1000 < lMs)
-      issues.push({w:true,msg:`Timer ${b.key.toUpperCase()} interval < loop time.`});
+  if(!cfg.sequence.rows.length && !cfg.mouseSkills.length)
+    issues.push({msg:'No actions configured.'});
+  cfg.buffs.filter(b=>b.enabled!==false).forEach(b=>{
+    if((b.interval||5)*60*1000 < lMs)
+      issues.push({msg:`${b.key.toUpperCase()} buff interval shorter than loop — will miss fires.`});
   });
   if(!issues.length){
     el.innerHTML='<div class="conf-item c-ok">&#x2713; No conflicts detected.</div>';
   } else {
     issues.forEach(iss=>{
       const d=document.createElement('div');
-      d.className='conf-item '+(iss.w?'c-warn':'c-ok');
-      d.textContent=(iss.w?'⚠ ':'✓ ')+iss.msg;
+      d.className='conf-item c-warn';
+      d.textContent='⚠ '+iss.msg;
       el.appendChild(d);
     });
   }
@@ -1101,8 +1038,8 @@ function getConfig() {
     name:  profiles[activeIdx]?.name||'MACRO',
     icon:  profiles[activeIdx]?.icon||'🌾',
     triggerButton: +document.getElementById('triggerButton').value,
-    maxRuntime:    +document.getElementById('maxRuntime').value,
-    maxLoops:      +document.getElementById('maxLoops').value,
+    maxRuntime:    0,
+    maxLoops:      0,
     jitterPct:     +document.getElementById('jitterPct').value,
     walk:{
       mode:            getMoveMode(),
@@ -1135,8 +1072,6 @@ function getConfig() {
 function applyConfig(cfg) {
   if (!cfg) return;
   if (cfg.triggerButton!==undefined) document.getElementById('triggerButton').value = cfg.triggerButton;
-  if (cfg.maxRuntime!==undefined)    document.getElementById('maxRuntime').value    = cfg.maxRuntime;
-  if (cfg.maxLoops!==undefined)      document.getElementById('maxLoops').value      = cfg.maxLoops;
   if (cfg.jitterPct!==undefined){
     document.getElementById('jitterPct').value=cfg.jitterPct;
     document.getElementById('jitterVal').textContent=cfg.jitterPct+'%';
@@ -1155,16 +1090,8 @@ function applyConfig(cfg) {
     if (w.min!==undefined)              document.getElementById('walkMin').value          = w.min;
     if (w.max!==undefined)              document.getElementById('walkMax').value          = w.max;
     if (w.changeInterval!==undefined)   document.getElementById('walkChange').value       = w.changeInterval;
-    if (w.weightCardinal!==undefined){
-      document.getElementById('weightCardinal').value=w.weightCardinal;
-      document.getElementById('wnum-cardinal').textContent=w.weightCardinal;
-      renderWbar('cardinal',w.weightCardinal);
-    }
-    if (w.weightDiagonal!==undefined){
-      document.getElementById('weightDiagonal').value=w.weightDiagonal;
-      document.getElementById('wnum-diagonal').textContent=w.weightDiagonal;
-      renderWbar('diagonal',w.weightDiagonal);
-    }
+    if (w.weightCardinal!==undefined) document.getElementById('weightCardinal').value=w.weightCardinal;
+    if (w.weightDiagonal!==undefined) document.getElementById('weightDiagonal').value=w.weightDiagonal;
     if (w.mouseClickArea!==undefined)   document.getElementById('mouseClickArea').value   = w.mouseClickArea;
     if (w.mouseArrivalWait!==undefined) document.getElementById('mouseArrivalWait').value = w.mouseArrivalWait;
     if (w.mouseClickCount!==undefined)  document.getElementById('mouseClickCount').value  = w.mouseClickCount;
@@ -1303,7 +1230,7 @@ function parseLuaConfig(lua) {
   if(bBlock){
     const rRe=/\{key="([^"]+)",\s*interval=(\d+),\s*preLockout=(\d+),\s*delay=(\d+)\}/g; let bm;
     while((bm=rRe.exec(bBlock[1]))!==null)
-      cfg.buffs.push({key:bm[1],interval:Math.round(+bm[2]/1000),offset:0,preLockout:Math.round(+bm[3]/1000),postDelay:+bm[4],enabled:true,name:'Buff '+bm[1].toUpperCase()});
+      cfg.buffs.push({key:bm[1],interval:+(+bm[2]/60000).toFixed(2),offset:0,preLockout:Math.round(+bm[3]/1000),postDelay:+bm[4],name:'Buff '+bm[1].toUpperCase()});
   }
   return cfg;
 }
@@ -1343,8 +1270,13 @@ end`;
 }
 
 function copyLoaderInline() {
-  navigator.clipboard.writeText(document.getElementById('loader-inline-out').textContent)
-    .then(() => showToast('LOADER COPIED'));
+  if (!document.getElementById('loader-path-input').value.trim()) {
+    document.getElementById('loader-path-err').style.display = '';
+    return;
+  }
+  const code = document.getElementById('loader-inline-out').textContent;
+  if (code.startsWith('--')) { showToast('SAVE A .LUA FILE FIRST'); return; }
+  navigator.clipboard.writeText(code).then(() => showToast('LOADER COPIED'));
 }
 
 // ── LUA GENERATOR ────────────────────────────
@@ -1376,7 +1308,7 @@ function generateLua() {
   const buffL=[];
   cfg.buffs.forEach(b=>{
     if(b.enabled===false) return;
-    buffL.push(`    {key="${b.key}", interval=${Math.round((b.interval||15)*1000)}, preLockout=${Math.round((b.preLockout||2)*1000)}, delay=${b.postDelay||500}},`);
+    buffL.push(`    {key="${b.key}", interval=${Math.round((b.interval||5)*60*1000)}, preLockout=${Math.round((b.preLockout||2)*1000)}, delay=${b.postDelay||500}},`);
   });
   const msL=[];
   cfg.mouseSkills.forEach(r=>{
@@ -1667,8 +1599,6 @@ function getCookie(name) {
 }
 
 // ── INIT ──────────────────────────────────────
-renderWbar('cardinal',2);
-renderWbar('diagonal',1);
 loadProfiles();
 updateTimeline();
 // init loader path from cookie
