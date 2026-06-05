@@ -1071,11 +1071,10 @@ function getConfig() {
 
 function applyConfig(cfg) {
   if (!cfg) return;
-  if (cfg.triggerButton!==undefined) document.getElementById('triggerButton').value = cfg.triggerButton;
-  if (cfg.jitterPct!==undefined){
-    document.getElementById('jitterPct').value=cfg.jitterPct;
-    document.getElementById('jitterVal').textContent=cfg.jitterPct+'%';
-  }
+  const setVal = (id, v) => { const el=document.getElementById(id); if(el) el.value=v; };
+  const setTxt = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  if (cfg.triggerButton!==undefined) setVal('triggerButton', cfg.triggerButton);
+  if (cfg.jitterPct!==undefined){ setVal('jitterPct', cfg.jitterPct); setTxt('jitterVal', cfg.jitterPct+'%'); }
   if (cfg.walk){
     const w=cfg.walk;
     if (w.mode){
@@ -1087,14 +1086,14 @@ function applyConfig(cfg) {
       if(oEl) oEl.checked = w.mode==='off';
       updateMoveMode();
     }
-    if (w.min!==undefined)              document.getElementById('walkMin').value          = w.min;
-    if (w.max!==undefined)              document.getElementById('walkMax').value          = w.max;
-    if (w.changeInterval!==undefined)   document.getElementById('walkChange').value       = w.changeInterval;
-    if (w.weightCardinal!==undefined) document.getElementById('weightCardinal').value=w.weightCardinal;
-    if (w.weightDiagonal!==undefined) document.getElementById('weightDiagonal').value=w.weightDiagonal;
-    if (w.mouseClickArea!==undefined)   document.getElementById('mouseClickArea').value   = w.mouseClickArea;
-    if (w.mouseArrivalWait!==undefined) document.getElementById('mouseArrivalWait').value = w.mouseArrivalWait;
-    if (w.mouseClickCount!==undefined)  document.getElementById('mouseClickCount').value  = w.mouseClickCount;
+    if (w.min!==undefined)              setVal('walkMin', w.min);
+    if (w.max!==undefined)              setVal('walkMax', w.max);
+    if (w.changeInterval!==undefined)   setVal('walkChange', w.changeInterval);
+    if (w.weightCardinal!==undefined)   setVal('weightCardinal', w.weightCardinal);
+    if (w.weightDiagonal!==undefined)   setVal('weightDiagonal', w.weightDiagonal);
+    if (w.mouseClickArea!==undefined)   setVal('mouseClickArea', w.mouseClickArea);
+    if (w.mouseArrivalWait!==undefined) setVal('mouseArrivalWait', w.mouseArrivalWait);
+    if (w.mouseClickCount!==undefined)  setVal('mouseClickCount', w.mouseClickCount);
     if (w.dirs){
       Object.assign(dirState,w.dirs);
       Object.keys(dirState).forEach(k=>{
@@ -1104,13 +1103,13 @@ function applyConfig(cfg) {
     }
   }
   if (cfg.mouse){
-    if (cfg.mouse.area!==undefined)    document.getElementById('mouseSkillArea').value = cfg.mouse.area;
-    if (cfg.mouse.screenW!==undefined) document.getElementById('screenW2').value       = cfg.mouse.screenW;
-    if (cfg.mouse.screenH!==undefined) document.getElementById('screenH2').value       = cfg.mouse.screenH;
+    if (cfg.mouse.area!==undefined)    setVal('mouseSkillArea', cfg.mouse.area);
+    if (cfg.mouse.screenW!==undefined) setVal('screenW2', cfg.mouse.screenW);
+    if (cfg.mouse.screenH!==undefined) setVal('screenH2', cfg.mouse.screenH);
   }
   if (cfg.sequence){
-    document.getElementById('seqMode').value    = cfg.sequence.mode||'after';
-    document.getElementById('seqCooldown').value= cfg.sequence.cooldown||500;
+    setVal('seqMode', cfg.sequence.mode||'after');
+    setVal('seqCooldown', cfg.sequence.cooldown||500);
     seqRows = cfg.sequence.rows||[];
     renderSeqList();
   }
@@ -1168,7 +1167,7 @@ function onFileLoad(e) {
       const cfg=parseLuaConfig(ev.target.result);
       if(cfg){applyConfig(cfg);showToast('CONFIG LOADED');}
       else showToast('ERROR: COULD NOT PARSE');
-    } catch{ showToast('ERROR: INVALID FILE'); }
+    } catch(err){ console.error('Load error:', err); showToast('ERROR: '+err.message); }
   };
   r.readAsText(file); e.target.value='';
 }
