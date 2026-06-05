@@ -73,6 +73,16 @@ body::before{
 .p-sum-title{font-family:var(--px);font-size:8px;letter-spacing:1px;color:var(--hot);margin-bottom:7px;}
 .sum-row{display:flex;justify-content:space-between;font-family:var(--vt);font-size:15px;color:var(--text2);margin-bottom:2px;}
 .sum-val{color:var(--text);}
+.sidebar-lists{flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column;}
+.sidebar-lists .profile-list{flex:none;}
+.sb-cloud-hdr{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg2);border-top:2px solid var(--border);border-bottom:2px solid var(--border);}
+.p-pub{position:absolute;bottom:4px;right:4px;background:none;border:none;color:inherit;opacity:.35;cursor:pointer;font-size:13px;padding:0;line-height:1;font-family:var(--vt);}
+.p-pub:hover{opacity:1;}
+.p-card.active .p-pub{color:var(--bg);}
+.p-card.cloud-mine{border-left:3px solid var(--green);}
+.p-copy-btn{font-family:var(--vt);font-size:15px;background:var(--hot);color:var(--bg);border:2px solid var(--bd2);cursor:pointer;padding:2px 8px;align-self:center;flex-shrink:0;white-space:nowrap;}
+.p-copy-btn:hover{opacity:.75;}
+.cloud-empty{font-family:var(--vt);font-size:14px;color:var(--dim);padding:8px 6px;text-align:center;}
 
 /* ── MAIN ── */
 .main-col{flex:1;display:flex;flex-direction:column;overflow:hidden;}
@@ -326,7 +336,14 @@ input[type=range]::-webkit-slider-thumb{
     <span class="sb-title">PROFILES</span>
     <button class="icon-btn" onclick="newProfile()">+</button>
   </div>
-  <div class="profile-list" id="profile-list"></div>
+  <div class="sidebar-lists">
+    <div class="profile-list" id="profile-list"></div>
+    <div class="sb-cloud-hdr">
+      <span class="sb-title">CLOUD POOL</span>
+      <button class="icon-btn" onclick="fetchCloudProfiles()" title="Refresh">↻</button>
+    </div>
+    <div class="profile-list" id="cloud-profile-list"></div>
+  </div>
   <div class="p-summary">
     <div class="p-sum-title">PROFILE SUMMARY</div>
     <div class="sum-row"><span>Loop Time</span><span class="sum-val" id="sum-loop">—</span></div>
@@ -564,6 +581,7 @@ input[type=range]::-webkit-slider-thumb{
           <span id="loader-fn-display" style="font-family:var(--vt);font-size:15px;color:#888;">— save a .lua file first —</span>
           <button class="btn" onclick="copyLoaderInline()" style="padding:4px 10px;">COPY</button>
         </div>
+        <div id="loader-fn-err" style="display:none;font-family:var(--vt);font-size:15px;color:#e06c75;margin-bottom:6px;">⚠ SAVE A .LUA FILE FIRST</div>
         <pre id="loader-inline-out" style="background:#222;border:2px solid #888;color:#aaa;font-family:'Courier New',monospace;font-size:12px;padding:11px;overflow-x:auto;white-space:pre;line-height:1.5;">-- save a .lua file to generate loader code</pre>
       </div>
     </div>
@@ -590,6 +608,11 @@ const P_ICONS = ['🌾','⚔','🏠','⛏','🎣','🗡','🏹','🛡','✨','�
 // ── PROFILES ──────────────────────────────────
 let profiles = [];
 let activeIdx = 0;
+
+// ── CLOUD ─────────────────────────────────────
+let _userId = localStorage.getItem('gmacro-userId');
+if (!_userId) { _userId = crypto.randomUUID(); localStorage.setItem('gmacro-userId', _userId); }
+let cloudProfiles = [];
 
 function mkProfile(name, icon) {
   return {
@@ -639,11 +662,13 @@ function renderProfiles() {
     const s = profSummary(p);
     const c = document.createElement('div');
     c.className = 'p-card' + (i===activeIdx?' active':'');
-    c.innerHTML = `<div style="min-width:0;flex:1;">
+    const isCloud = !!p.cloudId && cloudProfiles.some(cp => cp.id === p.cloudId);
+    c.innerHTML = `<div style="min-width:0;flex:1;padding-right:16px;">
         <div class="p-name">${p.name}${i===activeIdx?' ◀':''}</div>
         <div class="p-meta">${s.acts} Skills<br>${s.timers} Buff${s.timers!==1?'s':''}<br>Loop ${s.loop}<br>${s.mode}</div>
       </div>
-      ${profiles.length>1?`<button class="p-del" onclick="event.stopPropagation();deleteProfile(${i})">×</button>`:''}`;
+      ${profiles.length>1?`<button class="p-del" onclick="event.stopPropagation();deleteProfile(${i})">×</button>`:''}
+      <button class="p-pub" onclick="event.stopPropagation();publishProfile(${i})" title="${isCloud?'Re-sync':'Publish to cloud'}">${isCloud?'✓☁':'☁'}</button>`;
     c.onclick = () => switchProfile(i);
     el.appendChild(c);
   });
@@ -1239,7 +1264,10 @@ let _loaderFn = '';
 
 function setLoaderFile(fn) {
   _loaderFn = fn;
+  setCookie('loaderFileName', fn, 365);
   document.getElementById('loader-fn-display').textContent = fn;
+  document.getElementById('loader-fn-display').style.color = '#222';
+  document.getElementById('loader-fn-err').style.display = 'none';
   renderLoaderInline(document.getElementById('loader-path-input').value);
 }
 
@@ -1273,8 +1301,8 @@ function copyLoaderInline() {
     document.getElementById('loader-path-err').style.display = '';
     return;
   }
+  if (!_loaderFn) { document.getElementById('loader-fn-err').style.display = ''; return; }
   const code = document.getElementById('loader-inline-out').textContent;
-  if (code.startsWith('--')) { showToast('SAVE A .LUA FILE FIRST'); return; }
   navigator.clipboard.writeText(code).then(() => showToast('LOADER COPIED'));
 }
 
@@ -1579,6 +1607,93 @@ end
   return lua;
 }
 
+// ── CLOUD PROFILES ────────────────────────────
+async function fetchCloudProfiles() {
+  try {
+    const r = await fetch('/api/profiles');
+    if (!r.ok) return;
+    cloudProfiles = await r.json();
+    renderCloudProfiles();
+    renderProfiles();
+  } catch {}
+}
+
+async function publishProfile(i) {
+  saveCurrentProfile();
+  const p = profiles[i];
+  if (!p.cloudId) p.cloudId = crypto.randomUUID();
+  try {
+    const r = await fetch('/api/profiles', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ profile: {...p, id: p.cloudId}, ownerId: _userId }),
+    });
+    if (!r.ok) { showToast('PUBLISH FAILED'); return; }
+    cloudProfiles = await r.json();
+    saveProfiles();
+    renderProfiles();
+    renderCloudProfiles();
+    showToast('PUBLISHED');
+  } catch { showToast('PUBLISH FAILED'); }
+}
+
+async function unpublishProfile(cloudId) {
+  try {
+    const r = await fetch('/api/profiles', {
+      method: 'DELETE',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ id: cloudId, ownerId: _userId }),
+    });
+    if (!r.ok) { showToast('FAILED'); return; }
+    cloudProfiles = await r.json();
+    profiles.forEach(p => { if (p.cloudId === cloudId) delete p.cloudId; });
+    saveProfiles();
+    renderProfiles();
+    renderCloudProfiles();
+    showToast('UNPUBLISHED');
+  } catch { showToast('FAILED'); }
+}
+
+function copyCloudProfile(ci) {
+  const cp = cloudProfiles[ci];
+  if (!cp) return;
+  saveCurrentProfile();
+  const copy = {...cp};
+  delete copy.id; delete copy.ownerId; delete copy.publishedAt; delete copy.cloudId;
+  copy.name = cp.name + ' (COPY)';
+  profiles.push(copy);
+  activeIdx = profiles.length - 1;
+  applyConfig(profiles[activeIdx]);
+  renderProfiles();
+  saveProfiles();
+  showToast('COPIED TO LOCAL');
+}
+
+function renderCloudProfiles() {
+  const el = document.getElementById('cloud-profile-list');
+  if (!el) return;
+  el.innerHTML = '';
+  if (!cloudProfiles.length) {
+    el.innerHTML = '<div class="cloud-empty">NO PROFILES YET</div>';
+    return;
+  }
+  cloudProfiles.forEach((cp, ci) => {
+    const mine = cp.ownerId === _userId;
+    const s = profSummary(cp);
+    const c = document.createElement('div');
+    c.className = 'p-card' + (mine ? ' cloud-mine' : '');
+    c.innerHTML = `<div style="min-width:0;flex:1;padding-right:${mine?'18px':'0'};">
+        <div class="p-name">${cp.name} ${mine?'☁✓':'☁'}</div>
+        <div class="p-meta">${s.acts} Skills<br>${s.timers} Buff${s.timers!==1?'s':''}<br>Loop ${s.loop}</div>
+      </div>
+      ${mine
+        ? `<button class="p-del" title="Unpublish" onclick="event.stopPropagation();unpublishProfile('${cp.id}')">×</button>`
+        : `<button class="p-copy-btn" onclick="event.stopPropagation();copyCloudProfile(${ci})">COPY</button>`
+      }`;
+    el.appendChild(c);
+  });
+}
+
 // ── TOAST ─────────────────────────────────────
 let _tt;
 function showToast(msg) {
@@ -1600,10 +1715,14 @@ function getCookie(name) {
 // ── INIT ──────────────────────────────────────
 loadProfiles();
 updateTimeline();
-// init loader path from cookie
+fetchCloudProfiles();
+setInterval(fetchCloudProfiles, 30000);
+// init loader path + filename from cookies
 (function(){
-  const saved = getCookie('loaderDirPath');
-  if (saved) document.getElementById('loader-path-input').value = saved;
+  const savedDir = getCookie('loaderDirPath');
+  if (savedDir) document.getElementById('loader-path-input').value = savedDir;
+  const savedFn = getCookie('loaderFileName');
+  if (savedFn) setLoaderFile(savedFn);
 })();
 </script>
 </body>
