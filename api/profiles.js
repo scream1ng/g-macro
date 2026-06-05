@@ -1,11 +1,12 @@
-const { put, head } = require('@vercel/blob');
+const { put, head, getDownloadUrl } = require('@vercel/blob');
 
 const BLOB_PATH = 'gmacro-profiles.json';
 
 async function readProfiles() {
   try {
     const blob = await head(BLOB_PATH);
-    const res = await fetch(blob.url + '?t=' + Date.now());
+    const { url: signedUrl } = await getDownloadUrl(blob.url);
+    const res = await fetch(signedUrl);
     return await res.json();
   } catch {
     return [];
@@ -14,7 +15,7 @@ async function readProfiles() {
 
 async function writeProfiles(profiles) {
   await put(BLOB_PATH, JSON.stringify(profiles), {
-    access: 'public',
+    access: 'private',
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: 'application/json',
