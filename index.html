@@ -989,7 +989,7 @@ function updateTimeline() {
   activeBufss.forEach((b,i)=>{
     const minVal = b.interval||5;
     const intervalStr = Number.isInteger(minVal)?`${minVal}m`:`${minVal}m`;
-    const warn = lMs>0 && sec*1000 < lMs;
+    const warn = lMs>0 && minVal*60*1000 < lMs;
     const row = document.createElement('div');
     row.className='tl-buff-row';
     row.innerHTML=`
