@@ -910,7 +910,7 @@ function renderBuffList() {
 let walkSkillRows = [];
 
 function addWalkSkillRow(data) {
-  walkSkillRows.push(data||{key:'q',hold:100,interval:8000,enabled:true});
+  walkSkillRows.push(data||{key:'q',hold:100,interval:1000,enabled:true});
   renderWsList(); updateTimeline(); updateSummary();
 }
 function removeWalkSkillRow(i) {
@@ -949,7 +949,7 @@ function renderWsList() {
       </div>
       <div style="display:flex;align-items:center;gap:3px;margin-left:6px;">
         <span class="ms-sfx" style="font-size:13px;color:#999;">every</span>
-        <input type="number" class="seq-ms" value="${row.interval||8000}" min="100" step="500"
+        <input type="number" class="seq-ms" value="${row.interval||1000}" min="100" step="500"
           onchange="walkSkillRows[${i}].interval=+this.value;updateTimeline();">
         <span class="ms-sfx">ms</span>
       </div>
@@ -1078,7 +1078,7 @@ function updateTimeline() {
   if (walkBarEl && wAvg>0 && activeWS.length) {
     const slotH = Math.floor(100/activeWS.length);
     activeWS.forEach((s,i)=>{
-      const interval = s.interval||8000;
+      const interval = s.interval||1000;
       const hold = s.hold||100;
       const color = WS_COLORS[i%WS_COLORS.length];
       const top = i*slotH;
@@ -1133,10 +1133,10 @@ function updateTimeline() {
     const row = document.createElement('div');
     row.className='tl-brow';
     row.innerHTML=`
-      <span class="tl-brow-lbl" style="color:${color};">${s.key.toUpperCase()} ∈WALK</span>
-      <span class="tl-brow-val">~${(s.interval||8000)}ms</span>
-      <div class="tl-brow-bar"><div style="height:100%;width:${Math.min(wAvg/(s.interval||8000)*100,100).toFixed(1)}%;background:${color};"></div></div>
-      <span class="tl-brow-pct">${(wAvg/(s.interval||8000)).toFixed(1)}×</span>`;
+      <span class="tl-brow-lbl" style="color:${color};">WALK - ${s.key.toUpperCase()}</span>
+      <span class="tl-brow-val">~${(s.interval||1000)}ms</span>
+      <div class="tl-brow-bar"><div style="height:100%;width:${Math.min(wAvg/(s.interval||1000)*100,100).toFixed(1)}%;background:${color};"></div></div>
+      <span class="tl-brow-pct">${(wAvg/(s.interval||1000)).toFixed(1)}×</span>`;
     bdEl.appendChild(row);
   });
 
@@ -1495,7 +1495,7 @@ function generateLua() {
   const wsL=[];
   (cfg.walkSkills||[]).forEach(r=>{
     if(r.enabled===false) return;
-    wsL.push(`    {key="${r.key}", hold=${r.hold||100}, interval=${r.interval||8000}},`);
+    wsL.push(`    {key="${r.key}", hold=${r.hold||100}, interval=${r.interval||1000}},`);
   });
   const maxRtMs = cfg.maxRuntime>0?cfg.maxRuntime*1000:0;
 
