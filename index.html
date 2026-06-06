@@ -1159,7 +1159,7 @@ function updateTimeline() {
     row.className='tl-brow';
     if (ph.during) {
       row.innerHTML=`
-        <span class="tl-brow-lbl" style="color:${ph.color};">${ph.label} ∈WALK</span>
+        <span class="tl-brow-lbl" style="color:${ph.color};">${ph.label} (DURING WALK)</span>
         <span class="tl-brow-val" style="color:#888;">${(ph.ms/1000).toFixed(2)}s</span>
         <div class="tl-brow-bar"><div style="height:100%;width:100%;background:${ph.color};opacity:0.35;"></div></div>
         <span class="tl-brow-pct" style="color:#888;">overlap</span>`;
