@@ -378,7 +378,6 @@ input[type=range]::-webkit-slider-thumb{
     <div class="sec">
       <div class="sec-hdr">
         <span class="sec-title">⚙ 1. CORE SETTINGS</span>
-        <button class="help-btn">?</button>
       </div>
       <div class="sec-body">
         <div class="f-grid" style="grid-template-columns:155px 1fr;">
@@ -416,7 +415,6 @@ input[type=range]::-webkit-slider-thumb{
     <div class="sec">
       <div class="sec-hdr">
         <span class="sec-title">✂ 2. MOVEMENT</span>
-        <button class="help-btn">?</button>
       </div>
       <div class="sec-body">
         <div class="move-grid">
@@ -489,30 +487,25 @@ input[type=range]::-webkit-slider-thumb{
             </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 3. WALK SKILLS -->
-    <div class="sec">
-      <div class="sec-hdr">
-        <span class="sec-title">&#x1F3C3; 3. WALK SKILLS <span id="ws-count" style="font-family:var(--vt);font-size:16px;color:#888;"></span></span>
-      </div>
-      <div class="sec-body" style="padding:10px;">
-        <div style="font-family:var(--vt);font-size:14px;color:#666;margin-bottom:10px;">FIRES WHILE WALKING. NO MOVEMENT INTERRUPT. EACH HAS OWN COOLDOWN.</div>
+        <!-- Walk skills — fire during walk loop -->
+        <hr style="border:none;border-top:1px solid var(--border);margin:10px 0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <label class="f-lbl" style="margin:0;">WALK SKILLS <span id="ws-count" style="font-family:var(--vt);font-size:13px;color:#888;"></span></label>
+          <button class="btn-add" onclick="addWalkSkillRow()" style="padding:2px 8px;font-size:13px;">+ ADD</button>
+        </div>
+        <div style="font-family:var(--vt);font-size:13px;color:#555;margin-bottom:6px;">FIRES DURING WALK — NO INTERRUPT. PER-SKILL COOLDOWN.</div>
         <div id="walk-skill-list"></div>
-        <button class="btn-add" onclick="addWalkSkillRow()">+ ADD WALK SKILL</button>
       </div>
     </div>
 
-    <!-- 4. ROTATION -->
+    <!-- 3. ROTATION -->
     <div class="sec">
       <div class="sec-hdr">
-        <span class="sec-title">&#x1F5A5; 4. ROTATION</span>
+        <span class="sec-title">&#x1F5A5; 3. ROTATION</span>
         <select id="seqMode" onchange="updateTimeline()" style="font-family:var(--vt);font-size:14px;background:var(--bg2);color:var(--fg);border:1px solid var(--border);padding:2px 6px;">
           <option value="after">CAST: STAND STILL</option>
           <option value="during">CAST: DURING WALK</option>
         </select>
-        <button class="help-btn">?</button>
       </div>
       <div class="sec-body" style="padding:8px;">
         <div id="seq-list"></div>
@@ -523,7 +516,7 @@ input[type=range]::-webkit-slider-thumb{
       </div>
     </div>
 
-    <!-- 4.5. MOUSE SKILLS -->
+    <!-- 4. MOUSE SKILLS -->
     <div class="sec">
       <div class="sec-hdr">
         <span class="sec-title">&#x1F5B1; MOUSE SKILLS <span id="ms-count" style="font-family:var(--vt);font-size:16px;color:#888;"></span></span>
@@ -555,8 +548,7 @@ input[type=range]::-webkit-slider-thumb{
     <!-- 4. TIMERS -->
     <div class="sec">
       <div class="sec-hdr">
-        <span class="sec-title">&#x23F2; 4. TIMERS (BUFFS / COOLDOWNS)</span>
-        <button class="help-btn">?</button>
+        <span class="sec-title">&#x23F2; 5. TIMERS (BUFFS / COOLDOWNS)</span>
       </div>
       <div class="sec-body" style="padding:8px;">
         <div id="buff-list"></div>
@@ -588,7 +580,6 @@ input[type=range]::-webkit-slider-thumb{
     <div class="sec">
       <div class="sec-hdr">
         <span class="sec-title">6. G HUB LOADER</span>
-        <button class="help-btn">?</button>
       </div>
       <div class="sec-body" style="padding:8px 10px;">
         <div style="font-family:var(--vt);font-size:15px;color:#666;margin-bottom:8px;">PASTE ONCE IN G HUB — SAVE UPDATES .LUA AUTOMATICALLY.</div>
