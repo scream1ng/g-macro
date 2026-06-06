@@ -944,7 +944,7 @@ function renderWsList() {
       <div style="display:flex;align-items:center;gap:3px;">
         <span class="ms-sfx" style="font-size:13px;color:#999;">hold</span>
         <input type="number" class="seq-ms" value="${row.hold||100}" min="25" step="25"
-          onchange="walkSkillRows[${i}].hold=+this.value;">
+          onchange="walkSkillRows[${i}].hold=+this.value;updateTimeline();">
         <span class="ms-sfx">ms</span>
       </div>
       <div style="display:flex;align-items:center;gap:3px;margin-left:6px;">
