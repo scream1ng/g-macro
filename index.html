@@ -1106,7 +1106,7 @@ function updateTimeline() {
     pos += w;
   });
   // overlay walk skill ticks + during-walk sections inside walk bar
-  const activeWS = (cfg.walkSkills||[]).filter(s=>s.enabled!==false);
+  const activeWS = seqDuring ? [] : (cfg.walkSkills||[]).filter(s=>s.enabled!==false);
   const allOverlays = [...walkOverlays, ...activeWS.map(s=>({_ws:true,...s}))];
   if (walkBarEl && wAvg>0 && walkOverlays.length) {
     let overlayPos = 0;
