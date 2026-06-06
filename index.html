@@ -937,7 +937,7 @@ function renderWsList() {
       `<option value="${k}"${row.key===k?' selected':''}>${k.toUpperCase()}</option>`).join('');
     const div = document.createElement('div');
     div.className = 'seq-row'; div.draggable = true; div._drag = i;
-    div.style.borderLeftColor = COLORS[(i+2) % COLORS.length];
+    div.style.borderLeftColor = ['#2ecfcf','#e24ca8','#6fe26f','#f0a030'][i%4];
     div.style.opacity = enabled ? '1' : '0.4';
     div.innerHTML = `
       <span class="drag-handle">⠿</span>
@@ -963,6 +963,7 @@ function renderWsList() {
     sel.value = row.key;
     sel.addEventListener('change', function() {
       walkSkillRows[i].key = this.value;
+      updateTimeline();
     });
     list.appendChild(div);
   });
