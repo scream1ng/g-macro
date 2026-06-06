@@ -1109,9 +1109,9 @@ function updateTimeline() {
   if (walkBarEl && wAvg>0 && walkOverlays.length) {
     let overlayPos = 0;
     walkOverlays.forEach((ov)=>{
-      const wPct = Math.min(ov.ms / wAvg * 100, 100 - overlayPos);
+      const wPct = ov.ms / walkDisplayMs * 100;
       const stripe = document.createElement('div');
-      stripe.style.cssText=`position:absolute;left:${overlayPos}%;width:${wPct}%;top:0;bottom:0;background:${ov.color};opacity:0.35;`;
+      stripe.style.cssText=`position:absolute;left:${overlayPos}%;width:${wPct}%;top:0;bottom:0;background:${ov.color};opacity:0.45;`;
       stripe.title=`${ov.label} — during walk (${ov.ms}ms)`;
       walkBarEl.appendChild(stripe);
       overlayPos += wPct;
@@ -1141,14 +1141,47 @@ function updateTimeline() {
   // labels below bar
   const labelsEl = document.getElementById('tl-labels');
   labelsEl.innerHTML='';
-  segs.forEach(seg=>{
-    const w = seg.ms/total*100;
-    const lbl = document.createElement('span');
-    lbl.className='tl-lbl';
-    lbl.style.cssText=`width:${w}%;color:${seg.color};`;
-    lbl.textContent=w>4?seg.label:'';
-    labelsEl.appendChild(lbl);
-  });
+  if (walkOverlays.length > 0) {
+    // individual skill labels aligned with overlays
+    let usedMs = 0;
+    walkOverlays.forEach((ov)=>{
+      const w = ov.ms/total*100;
+      const lbl = document.createElement('span');
+      lbl.className='tl-lbl';
+      lbl.style.cssText=`width:${w}%;color:${ov.color};`;
+      lbl.textContent=w>3?ov.label:'';
+      labelsEl.appendChild(lbl);
+      usedMs += ov.ms;
+    });
+    // remaining walk time after overlays (walk > seq)
+    const remainMs = walkDisplayMs - usedMs;
+    if (remainMs > 1) {
+      const w = remainMs/total*100;
+      const lbl = document.createElement('span');
+      lbl.className='tl-lbl';
+      lbl.style.cssText=`width:${w}%;color:#666;`;
+      lbl.textContent=w>4?'WALK':'';
+      labelsEl.appendChild(lbl);
+    }
+    // any non-walk segs (mouse skills stand-still etc.)
+    segs.slice(1).forEach(seg=>{
+      const w = seg.ms/total*100;
+      const lbl = document.createElement('span');
+      lbl.className='tl-lbl';
+      lbl.style.cssText=`width:${w}%;color:${seg.color};`;
+      lbl.textContent=w>4?seg.label:'';
+      labelsEl.appendChild(lbl);
+    });
+  } else {
+    segs.forEach(seg=>{
+      const w = seg.ms/total*100;
+      const lbl = document.createElement('span');
+      lbl.className='tl-lbl';
+      lbl.style.cssText=`width:${w}%;color:${seg.color};`;
+      lbl.textContent=w>4?seg.label:'';
+      labelsEl.appendChild(lbl);
+    });
+  }
 
   // breakdown rows
   const bdEl = document.getElementById('tl-breakdown');
