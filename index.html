@@ -489,12 +489,9 @@ input[type=range]::-webkit-slider-thumb{
         </div>
         <!-- Walk skills — fire during walk loop -->
         <hr style="border:none;border-top:1px solid var(--border);margin:10px 0;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-          <label class="f-lbl" style="margin:0;">WALK SKILLS <span id="ws-count" style="font-family:var(--vt);font-size:13px;color:#888;"></span></label>
-          <button class="btn-add" onclick="addWalkSkillRow()" style="padding:2px 8px;font-size:13px;">+ ADD</button>
-        </div>
-        <div style="font-family:var(--vt);font-size:13px;color:#555;margin-bottom:6px;">FIRES DURING WALK — NO INTERRUPT. PER-SKILL COOLDOWN.</div>
+        <label class="f-lbl">WALK SKILLS <span id="ws-count" style="font-family:var(--vt);font-size:13px;color:#888;"></span></label>
         <div id="walk-skill-list"></div>
+        <button class="btn-add" onclick="addWalkSkillRow()">+ ADD WALK SKILL</button>
       </div>
     </div>
 
