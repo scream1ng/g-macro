@@ -651,7 +651,9 @@ function msSkillMs(rows) {
 
 function loopMs(p) {
   const walkAvg = p.walk?.mode==='off' ? 0 : ((p.walk?.min||1500) + (p.walk?.max||2500)) / 2;
-  return Math.round(walkAvg + seqMs(p.sequence?.rows) + msSkillMs(p.mouseSkills));
+  const seqCost = p.sequence?.mode==='during' ? 0 : seqMs(p.sequence?.rows);
+  const msCost  = p.mouseSkillsMode==='during'  ? 0 : msSkillMs(p.mouseSkills);
+  return Math.round(walkAvg + seqCost + msCost);
 }
 
 function profSummary(p) {
@@ -1027,30 +1029,53 @@ const ACT_COLORS = ['#d4843a','#3a8cd4','#d43a3a','#3ab43a','#8c3ad4','#d4c83a',
 
 function updateTimeline() {
   const cfg    = getConfig();
+  const seqDuring = cfg.sequence.mode==='during';
+  const msDuring  = cfg.mouseSkillsMode==='during';
   const wAvg  = cfg.walk.mode==='off' ? 0 : (cfg.walk.min + cfg.walk.max) / 2;
   const sMs   = seqMs(cfg.sequence.rows);
-  const msMs  = cfg.mouseSkills.reduce((s,r)=>s+(r.hold||500)+(r.delay||50),0);
-  const lMs   = Math.round(wAvg + sMs + msMs);
+  const msMs  = cfg.mouseSkills.filter(r=>r.enabled!==false).reduce((s,r)=>s+(r.hold||500)+(r.delay||50),0);
+  const lMs   = Math.round(wAvg + (seqDuring?0:sMs) + (msDuring?0:msMs));
   const total = lMs || 1;
 
   // header
   document.getElementById('tl-total').textContent = (lMs/1000).toFixed(2)+' SEC / LOOP';
 
-  // build segments: walk + each seq row + each mouse skill
+  // build segments: walk always first; seq/mouse only if stand-still
   const segs = [];
   segs.push({label:'WALK', ms:wAvg, color:'#666', alpha:1});
-  cfg.sequence.rows.forEach((row,i)=>{
-    if (row.enabled===false) return;
-    const isKey = VALID_KEYS.includes(row.action);
-    const ms = (row.delay||0)+(isKey?(row.hold||50):0);
-    if (!ms) return;
-    segs.push({label: isKey?row.action.toUpperCase():(row.action==='wait'?'WAIT':row.action.replace('_',' ').toUpperCase()), ms, color:ACT_COLORS[i%ACT_COLORS.length], alpha:1});
-  });
-  cfg.mouseSkills.forEach((row,i)=>{
-    if (row.enabled===false) return;
-    const ms = (row.hold||500)+(row.delay||50);
-    segs.push({label:'M:'+row.key.toUpperCase(), ms, color:ACT_COLORS[(i+4)%ACT_COLORS.length], alpha:.7});
-  });
+  if (!seqDuring) {
+    cfg.sequence.rows.forEach((row,i)=>{
+      if (row.enabled===false) return;
+      const isKey = VALID_KEYS.includes(row.action);
+      const ms = (row.delay||0)+(isKey?(row.hold||50):0);
+      if (!ms) return;
+      segs.push({label: isKey?row.action.toUpperCase():(row.action==='wait'?'WAIT':row.action.replace('_',' ').toUpperCase()), ms, color:ACT_COLORS[i%ACT_COLORS.length], alpha:1});
+    });
+  }
+  if (!msDuring) {
+    cfg.mouseSkills.forEach((row,i)=>{
+      if (row.enabled===false) return;
+      const ms = (row.hold||500)+(row.delay||50);
+      segs.push({label:'M:'+row.key.toUpperCase(), ms, color:ACT_COLORS[(i+4)%ACT_COLORS.length], alpha:.7});
+    });
+  }
+  // overlays on walk bar for during-walk sections
+  const walkOverlays = [];
+  if (seqDuring) {
+    cfg.sequence.rows.forEach((row,i)=>{
+      if (row.enabled===false) return;
+      const isKey = VALID_KEYS.includes(row.action);
+      const ms = (row.delay||0)+(isKey?(row.hold||50):0);
+      if (!ms) return;
+      walkOverlays.push({label:isKey?row.action.toUpperCase():'SEQ', ms, color:ACT_COLORS[i%ACT_COLORS.length]});
+    });
+  }
+  if (msDuring) {
+    cfg.mouseSkills.forEach((row,i)=>{
+      if (row.enabled===false) return;
+      walkOverlays.push({label:'M:'+row.key.toUpperCase(), ms:(row.hold||500)+(row.delay||50), color:ACT_COLORS[(i+4)%ACT_COLORS.length]});
+    });
+  }
 
   // bar
   const bar = document.getElementById('tl-bar');
@@ -1073,8 +1098,19 @@ function updateTimeline() {
     if (si===0) walkBarEl = el;
     pos += w;
   });
-  // overlay walk skill ticks inside walk bar
+  // overlay walk skill ticks + during-walk sections inside walk bar
   const activeWS = (cfg.walkSkills||[]).filter(s=>s.enabled!==false);
+  const allOverlays = [...walkOverlays, ...activeWS.map(s=>({_ws:true,...s}))];
+  if (walkBarEl && wAvg>0 && allOverlays.length) {
+    // during-walk sections: show as semi-transparent stripe across full walk bar
+    walkOverlays.forEach((ov, i)=>{
+      const stripe = document.createElement('div');
+      const topPct = (i/Math.max(walkOverlays.length,1)*50);
+      stripe.style.cssText=`position:absolute;left:0;right:0;top:${topPct}%;height:${50/Math.max(walkOverlays.length,1)}%;background:${ov.color};opacity:0.35;`;
+      stripe.title=`${ov.label} — during walk`;
+      walkBarEl.appendChild(stripe);
+    });
+  }
   if (walkBarEl && wAvg>0 && activeWS.length) {
     const slotH = Math.floor(100/activeWS.length);
     activeWS.forEach((s,i)=>{
@@ -1112,20 +1148,28 @@ function updateTimeline() {
   const bdEl = document.getElementById('tl-breakdown');
   bdEl.innerHTML='';
   const phases = [
-    {label:'WALK',    ms:wAvg, color:'#666'},
-    {label:'ROTATION',ms:sMs,  color:ACT_COLORS[0]},
-    {label:'MOUSE',   ms:msMs, color:ACT_COLORS[4]},
+    {label:'WALK',    ms:wAvg, color:'#666', during:false},
+    {label:'ROTATION',ms:sMs,  color:ACT_COLORS[0], during:seqDuring},
+    {label:'MOUSE',   ms:msMs, color:ACT_COLORS[4], during:msDuring},
   ];
   phases.forEach(ph=>{
     if (!ph.ms) return;
     const pct = Math.round(ph.ms/total*100);
     const row = document.createElement('div');
     row.className='tl-brow';
-    row.innerHTML=`
-      <span class="tl-brow-lbl">${ph.label}</span>
-      <span class="tl-brow-val">${(ph.ms/1000).toFixed(2)}s</span>
-      <div class="tl-brow-bar"><div style="height:100%;width:${pct}%;background:${ph.color};"></div></div>
-      <span class="tl-brow-pct">${pct}%</span>`;
+    if (ph.during) {
+      row.innerHTML=`
+        <span class="tl-brow-lbl" style="color:${ph.color};">${ph.label} ∈WALK</span>
+        <span class="tl-brow-val" style="color:#888;">${(ph.ms/1000).toFixed(2)}s</span>
+        <div class="tl-brow-bar"><div style="height:100%;width:100%;background:${ph.color};opacity:0.35;"></div></div>
+        <span class="tl-brow-pct" style="color:#888;">overlap</span>`;
+    } else {
+      row.innerHTML=`
+        <span class="tl-brow-lbl">${ph.label}</span>
+        <span class="tl-brow-val">${(ph.ms/1000).toFixed(2)}s</span>
+        <div class="tl-brow-bar"><div style="height:100%;width:${pct}%;background:${ph.color};"></div></div>
+        <span class="tl-brow-pct">${pct}%</span>`;
+    }
     bdEl.appendChild(row);
   });
   activeWS.forEach((s,i)=>{
