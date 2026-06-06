@@ -1112,18 +1112,16 @@ function updateTimeline() {
     });
   }
   if (walkBarEl && wAvg>0 && activeWS.length) {
-    const slotH = Math.floor(100/activeWS.length);
     activeWS.forEach((s,i)=>{
       const interval = s.interval||1000;
       const hold = s.hold||100;
       const color = WS_COLORS[i%WS_COLORS.length];
-      const top = i*slotH;
       let t = 0;
       while (t <= wAvg) {
         const lPct = t/wAvg*100;
         const wPct = Math.max(hold/wAvg*100, 1.5);
         const tick = document.createElement('div');
-        tick.style.cssText=`position:absolute;left:${lPct}%;width:${wPct}%;top:${top}%;height:${slotH}%;background:${color};opacity:0.85;`;
+        tick.style.cssText=`position:absolute;left:${lPct}%;width:${wPct}%;top:0;bottom:0;background:${color};opacity:0.45;`;
         tick.title=`${s.key.toUpperCase()} — hold ${hold}ms, every ${interval}ms`;
         walkBarEl.appendChild(tick);
         t += interval;
