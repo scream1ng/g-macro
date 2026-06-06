@@ -910,7 +910,7 @@ function renderBuffList() {
 let walkSkillRows = [];
 
 function addWalkSkillRow(data) {
-  walkSkillRows.push(data||{key:'q',hold:100,interval:8,enabled:true});
+  walkSkillRows.push(data||{key:'q',hold:100,interval:8000,enabled:true});
   renderWsList(); updateTimeline(); updateSummary();
 }
 function removeWalkSkillRow(i) {
@@ -949,9 +949,9 @@ function renderWsList() {
       </div>
       <div style="display:flex;align-items:center;gap:3px;margin-left:6px;">
         <span class="ms-sfx" style="font-size:13px;color:#999;">every</span>
-        <input type="number" class="seq-ms" value="${row.interval||8}" min="0.5" step="0.5"
+        <input type="number" class="seq-ms" value="${row.interval||8000}" min="100" step="500"
           onchange="walkSkillRows[${i}].interval=+this.value;updateTimeline();">
-        <span class="ms-sfx">sec</span>
+        <span class="ms-sfx">ms</span>
       </div>
       <button class="del-btn" onclick="removeWalkSkillRow(${i})">×</button>`;
     attachDrag(div, i, walkSkillRows, renderWsList);
@@ -1123,12 +1123,11 @@ function updateTimeline() {
     buffsEl.appendChild(row);
   });
   activeWalkSkills.forEach(s=>{
-    const sec = s.interval||8;
     const row = document.createElement('div');
     row.className='tl-buff-row';
     row.innerHTML=`
       <span class="tl-buff-key">${s.key.toUpperCase()}</span>
-      <span class="tl-buff-info">walk-skill — every ${sec}s</span>`;
+      <span class="tl-buff-info">walk-skill — every ${s.interval||8000}ms</span>`;
     buffsEl.appendChild(row);
   });
 
@@ -1371,7 +1370,7 @@ function parseLuaConfig(lua) {
   if(wsBlock){
     const rRe=/\{key="([^"]+)",\s*hold=(\d+),\s*interval=(\d+)\}/g; let wm;
     while((wm=rRe.exec(wsBlock[1]))!==null)
-      cfg.walkSkills.push({key:wm[1],hold:+wm[2],interval:+(+wm[3]/1000).toFixed(2),enabled:true});
+      cfg.walkSkills.push({key:wm[1],hold:+wm[2],interval:+wm[3],enabled:true});
   }
   const bBlock=lua.match(/^buffs\s*=\s*\{([\s\S]*?)\n\}/m);
   if(bBlock){
@@ -1469,7 +1468,7 @@ function generateLua() {
   const wsL=[];
   (cfg.walkSkills||[]).forEach(r=>{
     if(r.enabled===false) return;
-    wsL.push(`    {key="${r.key}", hold=${r.hold||100}, interval=${Math.round((r.interval||8)*1000)}},`);
+    wsL.push(`    {key="${r.key}", hold=${r.hold||100}, interval=${r.interval||8000}},`);
   });
   const maxRtMs = cfg.maxRuntime>0?cfg.maxRuntime*1000:0;
 
