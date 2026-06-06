@@ -75,12 +75,14 @@ body::before{
 .sidebar-lists{flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column;}
 .sidebar-lists .profile-list{flex:none;}
 .sb-cloud-hdr{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg2);border-top:2px solid var(--border);border-bottom:2px solid var(--border);}
-.p-pub-btn{position:absolute;bottom:5px;right:6px;font-family:var(--vt);font-size:11px;padding:2px 6px;background:none;border:1px solid var(--border);color:var(--dim);cursor:pointer;white-space:nowrap;}
-.p-pub-btn:hover:not(:disabled){border-color:var(--text);color:var(--text);}
+.p-actions{display:flex;gap:5px;margin-top:8px;}
+.p-action-btn{font-family:var(--vt);font-size:13px;padding:3px 7px;background:none;border:1px solid var(--border);color:var(--dim);cursor:pointer;white-space:nowrap;flex:1;text-align:center;}
+.p-action-btn:hover:not(:disabled){border-color:var(--text);color:var(--text);}
+.p-action-btn:disabled{opacity:.45;cursor:default;}
 .p-pub-btn.published{border-color:var(--green);color:var(--green);}
 .p-pub-btn.published:hover:not(:disabled){border-color:var(--text);color:var(--text);}
-.p-pub-btn:disabled{opacity:.45;cursor:default;}
-.p-card.active .p-pub-btn{border-color:rgba(208,208,208,.35);color:rgba(208,208,208,.6);}
+.p-card.active .p-action-btn{border-color:rgba(208,208,208,.35);color:rgba(208,208,208,.6);}
+.p-card.active .p-action-btn:hover:not(:disabled){border-color:rgba(208,208,208,.9);color:rgba(208,208,208,1);}
 .p-card.active .p-pub-btn.published{border-color:var(--green);color:var(--green);}
 .p-card.active .p-pub-btn.published:hover:not(:disabled){border-color:rgba(208,208,208,.8);color:rgba(208,208,208,.9);}
 .p-card.cloud-mine{border-left:3px solid var(--green);}
@@ -683,17 +685,20 @@ function renderProfiles() {
     const c = document.createElement('div');
     c.className = 'p-card' + (i===activeIdx?' active':'');
     const isCloud = !!p.cloudId && cloudProfiles.some(cp => cp.id === p.cloudId);
-    c.innerHTML = `<div style="min-width:0;flex:1;overflow:hidden;padding-bottom:18px;">
+    c.innerHTML = `<div style="min-width:0;flex:1;overflow:hidden;">
         <div class="p-name" id="p-name-${i}" ondblclick="event.stopPropagation();startRename(${i})">${p.name}${i===activeIdx?' ◀':''}</div>
         <div class="p-meta">${s.acts} Skills<br>${s.timers} Buff${s.timers!==1?'s':''}<br>Loop ${s.loop}<br>${s.mode}</div>
+        <div class="p-actions">
+          <button class="p-action-btn" onclick="event.stopPropagation();startRename(${i})">✎ RENAME</button>
+          <button class="p-action-btn p-pub-btn${isCloud?' published':''}" id="pub-btn-${i}"
+            onclick="event.stopPropagation();publishProfile(${i})"
+            onmouseenter="if(this.classList.contains('published'))this.textContent='↑ UPDATE';"
+            onmouseleave="if(this.classList.contains('published'))this.textContent='✓ PUBLISHED';">
+            ${isCloud?'✓ PUBLISHED':'↑ PUBLISH'}
+          </button>
+        </div>
       </div>
-      ${profiles.length>1?`<button class="p-del" onclick="event.stopPropagation();deleteProfile(${i})" style="position:absolute;top:4px;right:4px;">×</button>`:''}
-      <button class="p-pub-btn${isCloud?' published':''}" id="pub-btn-${i}"
-        onclick="event.stopPropagation();publishProfile(${i})"
-        onmouseenter="if(this.classList.contains('published'))this.textContent='UPDATE ↑';"
-        onmouseleave="if(this.classList.contains('published'))this.textContent='PUBLISHED ✓';">
-        ${isCloud?'PUBLISHED ✓':'PUBLISH'}
-      </button>`;
+      ${profiles.length>1?`<button class="p-del" onclick="event.stopPropagation();deleteProfile(${i})" style="position:absolute;top:4px;right:4px;">×</button>`:''}`;
     c.onclick = () => switchProfile(i);
     el.appendChild(c);
   });
