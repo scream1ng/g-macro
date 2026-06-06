@@ -270,7 +270,7 @@ input[type=range]::-webkit-slider-thumb{
 /* ── TIMELINE ── */
 .tl-total{font-family:var(--px);font-size:14px;color:var(--hot);letter-spacing:2px;margin-bottom:8px;}
 .tl-bar{position:relative;height:38px;background:var(--bg);border:2px solid var(--bd2);overflow:hidden;margin-bottom:4px;}
-.tl-labels{display:flex;margin-bottom:10px;min-height:18px;}
+.tl-labels{display:flex;margin-bottom:10px;min-height:18px;position:relative;}
 .tl-lbl{font-family:var(--vt);font-size:13px;color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;padding:0 2px;flex-shrink:0;}
 .tl-breakdown{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;}
 .tl-brow{display:grid;grid-template-columns:90px 50px 1fr 36px;align-items:center;gap:6px;}
@@ -1142,7 +1142,7 @@ function updateTimeline() {
   const labelsEl = document.getElementById('tl-labels');
   labelsEl.innerHTML='';
   if (walkOverlays.length > 0) {
-    // individual skill labels aligned with overlays
+    // during-walk: individual skill labels aligned with overlays
     let usedMs = 0;
     walkOverlays.forEach((ov)=>{
       const w = ov.ms/total*100;
@@ -1153,7 +1153,6 @@ function updateTimeline() {
       labelsEl.appendChild(lbl);
       usedMs += ov.ms;
     });
-    // remaining walk time after overlays (walk > seq)
     const remainMs = walkDisplayMs - usedMs;
     if (remainMs > 1) {
       const w = remainMs/total*100;
@@ -1163,7 +1162,6 @@ function updateTimeline() {
       lbl.textContent=w>4?'WALK':'';
       labelsEl.appendChild(lbl);
     }
-    // any non-walk segs (mouse skills stand-still etc.)
     segs.slice(1).forEach(seg=>{
       const w = seg.ms/total*100;
       const lbl = document.createElement('span');
@@ -1172,14 +1170,20 @@ function updateTimeline() {
       lbl.textContent=w>4?seg.label:'';
       labelsEl.appendChild(lbl);
     });
-  } else {
-    segs.forEach(seg=>{
-      const w = seg.ms/total*100;
+  }
+  // stand-still: no flex labels (skills already labeled inside bar blocks)
+  // walk skill labels: absolute-positioned at first tick offset
+  if (activeWS.length > 0) {
+    let wsOff = 0;
+    activeWS.forEach((s,i)=>{
+      const hold = s.hold||100;
+      const color = WS_COLORS[i%WS_COLORS.length];
+      const leftPct = wsOff/total*100;
       const lbl = document.createElement('span');
-      lbl.className='tl-lbl';
-      lbl.style.cssText=`width:${w}%;color:${seg.color};`;
-      lbl.textContent=w>4?seg.label:'';
+      lbl.style.cssText=`position:absolute;left:${leftPct}%;font-family:var(--vt);font-size:11px;color:${color};white-space:nowrap;transform:translateX(-50%);bottom:0;`;
+      lbl.textContent=s.key.toUpperCase();
       labelsEl.appendChild(lbl);
+      wsOff += hold;
     });
   }
 
