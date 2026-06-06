@@ -1056,7 +1056,9 @@ function updateTimeline() {
   const bar = document.getElementById('tl-bar');
   bar.innerHTML = '';
   let pos = 0;
-  segs.forEach(seg=>{
+  const WS_COLORS = ['#2ecfcf','#e24ca8','#6fe26f','#f0a030'];
+  let walkBarEl = null;
+  segs.forEach((seg, si)=>{
     const w = seg.ms/total*100;
     const el = document.createElement('div');
     el.style.cssText=`position:absolute;left:${pos}%;width:${w}%;top:0;bottom:0;background:${seg.color};opacity:${seg.alpha};`;
@@ -1068,8 +1070,31 @@ function updateTimeline() {
       el.appendChild(lbl);
     }
     bar.appendChild(el);
+    if (si===0) walkBarEl = el;
     pos += w;
   });
+  // overlay walk skill ticks inside walk bar
+  const activeWS = (cfg.walkSkills||[]).filter(s=>s.enabled!==false);
+  if (walkBarEl && wAvg>0 && activeWS.length) {
+    const slotH = Math.floor(100/activeWS.length);
+    activeWS.forEach((s,i)=>{
+      const interval = s.interval||8000;
+      const hold = s.hold||100;
+      const color = WS_COLORS[i%WS_COLORS.length];
+      const top = i*slotH;
+      let t = 0;
+      while (t <= wAvg) {
+        const lPct = t/wAvg*100;
+        const wPct = Math.max(hold/wAvg*100, 1.5);
+        const tick = document.createElement('div');
+        tick.style.cssText=`position:absolute;left:${lPct}%;width:${wPct}%;top:${top}%;height:${slotH}%;background:${color};opacity:0.85;`;
+        tick.title=`${s.key.toUpperCase()} — hold ${hold}ms, every ${interval}ms`;
+        walkBarEl.appendChild(tick);
+        t += interval;
+        if (interval<=0) break;
+      }
+    });
+  }
 
   // labels below bar
   const labelsEl = document.getElementById('tl-labels');
@@ -1103,13 +1128,23 @@ function updateTimeline() {
       <span class="tl-brow-pct">${pct}%</span>`;
     bdEl.appendChild(row);
   });
+  activeWS.forEach((s,i)=>{
+    const color = WS_COLORS[i%WS_COLORS.length];
+    const row = document.createElement('div');
+    row.className='tl-brow';
+    row.innerHTML=`
+      <span class="tl-brow-lbl" style="color:${color};">${s.key.toUpperCase()} ∈WALK</span>
+      <span class="tl-brow-val">~${(s.interval||8000)}ms</span>
+      <div class="tl-brow-bar"><div style="height:100%;width:${Math.min(wAvg/(s.interval||8000)*100,100).toFixed(1)}%;background:${color};"></div></div>
+      <span class="tl-brow-pct">${(wAvg/(s.interval||8000)).toFixed(1)}×</span>`;
+    bdEl.appendChild(row);
+  });
 
   // buffs + walk skills list
   const buffsEl = document.getElementById('tl-buffs');
   buffsEl.innerHTML='';
   const activeBufss = cfg.buffs.filter(b=>b.enabled!==false);
-  const activeWalkSkills = (cfg.walkSkills||[]).filter(s=>s.enabled!==false);
-  document.getElementById('tl-buff-title').style.display = (activeBufss.length||activeWalkSkills.length)?'':'none';
+  document.getElementById('tl-buff-title').style.display = activeBufss.length?'':'none';
   activeBufss.forEach((b,i)=>{
     const minVal = b.interval||5;
     const intervalStr = Number.isInteger(minVal)?`${minVal}m`:`${minVal}m`;
@@ -1120,14 +1155,6 @@ function updateTimeline() {
       <span class="tl-buff-key">${b.key.toUpperCase()}</span>
       <span class="tl-buff-info">${b.name||b.key.toUpperCase()} — every ${intervalStr}</span>
       ${warn?`<span class="tl-buff-warn">⚠ < loop</span>`:''}`;
-    buffsEl.appendChild(row);
-  });
-  activeWalkSkills.forEach(s=>{
-    const row = document.createElement('div');
-    row.className='tl-buff-row';
-    row.innerHTML=`
-      <span class="tl-buff-key">${s.key.toUpperCase()}</span>
-      <span class="tl-buff-info">walk-skill — every ${s.interval||8000}ms</span>`;
     buffsEl.appendChild(row);
   });
 
