@@ -1106,7 +1106,8 @@ function updateTimeline() {
     pos += w;
   });
   // overlay walk skill ticks + during-walk sections inside walk bar
-  const activeWS = seqDuring ? [] : (cfg.walkSkills||[]).filter(s=>s.enabled!==false);
+  const allWS = (cfg.walkSkills||[]).filter(s=>s.enabled!==false);
+  const activeWS = seqDuring ? [] : allWS;
   const allOverlays = [...walkOverlays, ...activeWS.map(s=>({_ws:true,...s}))];
   if (walkBarEl && wAvg>0 && walkOverlays.length) {
     let overlayPos = 0;
@@ -1250,7 +1251,7 @@ function updateTimeline() {
   });
 
   // walk skill conflict warning
-  const wsConflict = seqDuring && activeWS.length > 0;
+  const wsConflict = seqDuring && allWS.length > 0;
   const wsWarnEl = document.getElementById('ws-conflict-warn');
   const wsListEl = document.getElementById('walk-skill-list');
   if (wsWarnEl) wsWarnEl.style.display = wsConflict ? '' : 'none';
