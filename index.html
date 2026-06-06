@@ -1112,11 +1112,13 @@ function updateTimeline() {
     });
   }
   if (walkBarEl && wAvg>0 && activeWS.length) {
+    let wsOffset = 0;
     activeWS.forEach((s,i)=>{
       const interval = s.interval||1000;
       const hold = s.hold||100;
       const color = WS_COLORS[i%WS_COLORS.length];
-      let t = 0;
+      let t = wsOffset;
+      wsOffset += hold;
       while (t <= wAvg) {
         const lPct = t/wAvg*100;
         const wPct = Math.max(hold/wAvg*100, 1.5);
@@ -1667,7 +1669,11 @@ function InitBuffs()
 end
 function InitWalkSkills()
     local now=GetRunningTime()
-    for i=1,#walkSkills do state.walkSkillNext[i]=now end
+    local offset=0
+    for i=1,#walkSkills do
+        state.walkSkillNext[i]=now+offset
+        offset=offset+(walkSkills[i].hold or 100)
+    end
 end
 function FireDueWalkSkills()
     if CheckStop() then return false end
