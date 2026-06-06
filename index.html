@@ -1101,14 +1101,15 @@ function updateTimeline() {
   // overlay walk skill ticks + during-walk sections inside walk bar
   const activeWS = (cfg.walkSkills||[]).filter(s=>s.enabled!==false);
   const allOverlays = [...walkOverlays, ...activeWS.map(s=>({_ws:true,...s}))];
-  if (walkBarEl && wAvg>0 && allOverlays.length) {
-    // during-walk sections: show as semi-transparent stripe across full walk bar
-    walkOverlays.forEach((ov, i)=>{
+  if (walkBarEl && wAvg>0 && walkOverlays.length) {
+    let overlayPos = 0;
+    walkOverlays.forEach((ov)=>{
+      const wPct = Math.min(ov.ms / wAvg * 100, 100 - overlayPos);
       const stripe = document.createElement('div');
-      const topPct = (i/Math.max(walkOverlays.length,1)*50);
-      stripe.style.cssText=`position:absolute;left:0;right:0;top:${topPct}%;height:${50/Math.max(walkOverlays.length,1)}%;background:${ov.color};opacity:0.35;`;
-      stripe.title=`${ov.label} — during walk`;
+      stripe.style.cssText=`position:absolute;left:${overlayPos}%;width:${wPct}%;top:0;bottom:0;background:${ov.color};opacity:0.35;`;
+      stripe.title=`${ov.label} — during walk (${ov.ms}ms)`;
       walkBarEl.appendChild(stripe);
+      overlayPos += wPct;
     });
   }
   if (walkBarEl && wAvg>0 && activeWS.length) {
