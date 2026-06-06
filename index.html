@@ -60,14 +60,13 @@ body::before{
   padding:7px 9px;cursor:pointer;display:flex;gap:8px;align-items:flex-start;
   position:relative;
 }
-.p-del{position:absolute;top:4px;right:4px;background:none;border:none;color:inherit;opacity:.4;cursor:pointer;font-size:14px;padding:0 2px;line-height:1;}
+.p-del{background:none;border:none;color:inherit;opacity:.4;cursor:pointer;font-size:14px;padding:0 2px;line-height:1;flex-shrink:0;}
 .p-del:hover{opacity:1;}
-.p-card.active .p-del{color:var(--bg);}
 .p-card:hover{background:var(--panel);}
 .p-card.active{background:var(--hot);border-color:var(--hot);color:var(--bg);}
-.p-name{font-family:var(--px);font-size:8px;letter-spacing:1px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.p-name{font-family:var(--px);font-size:8px;letter-spacing:1px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;}
 .p-meta{font-family:var(--vt);font-size:15px;line-height:1.4;color:var(--text2);}
-.p-card.active .p-meta{color:rgba(255,255,255,.7);}
+.p-card.active .p-meta{color:rgba(208,208,208,.7);}
 .p-card.active .p-name{color:var(--bg);}
 .p-summary{border-top:2px solid var(--border);padding:9px 12px;flex-shrink:0;background:var(--bg2);}
 .p-sum-title{font-family:var(--px);font-size:8px;letter-spacing:1px;color:var(--hot);margin-bottom:7px;}
@@ -76,9 +75,12 @@ body::before{
 .sidebar-lists{flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column;}
 .sidebar-lists .profile-list{flex:none;}
 .sb-cloud-hdr{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg2);border-top:2px solid var(--border);border-bottom:2px solid var(--border);}
-.p-pub{position:absolute;bottom:4px;right:4px;background:none;border:none;color:inherit;opacity:.35;cursor:pointer;font-size:13px;padding:0;line-height:1;font-family:var(--vt);}
-.p-pub:hover{opacity:1;}
-.p-card.active .p-pub{color:var(--bg);}
+.p-pub-btn{font-family:var(--vt);font-size:11px;padding:2px 6px;background:none;border:1px solid var(--border);color:var(--dim);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.p-pub-btn:hover:not(:disabled){border-color:var(--text);color:var(--text);}
+.p-pub-btn.published{border-color:var(--green);color:var(--green);}
+.p-pub-btn:disabled{opacity:.45;cursor:default;}
+.p-card.active .p-pub-btn{border-color:rgba(208,208,208,.35);color:rgba(208,208,208,.7);}
+.p-card.active .p-pub-btn.published{border-color:var(--green);color:var(--green);}
 .p-card.cloud-mine{border-left:3px solid var(--green);}
 .p-copy-btn{font-family:var(--vt);font-size:15px;background:var(--hot);color:var(--bg);border:2px solid var(--bd2);cursor:pointer;padding:2px 8px;align-self:center;flex-shrink:0;white-space:nowrap;}
 .p-copy-btn:hover{opacity:.75;}
@@ -679,12 +681,15 @@ function renderProfiles() {
     const c = document.createElement('div');
     c.className = 'p-card' + (i===activeIdx?' active':'');
     const isCloud = !!p.cloudId && cloudProfiles.some(cp => cp.id === p.cloudId);
-    c.innerHTML = `<div style="min-width:0;flex:1;padding-right:16px;">
-        <div class="p-name">${p.name}${i===activeIdx?' ◀':''}</div>
+    const pubLabel = isCloud ? 'PUBLISHED ✓' : 'PUBLISH';
+    c.innerHTML = `<div style="min-width:0;flex:1;overflow:hidden;">
+        <div class="p-name" id="p-name-${i}" ondblclick="event.stopPropagation();startRename(${i})">${p.name}${i===activeIdx?' ◀':''}</div>
         <div class="p-meta">${s.acts} Skills<br>${s.timers} Buff${s.timers!==1?'s':''}<br>Loop ${s.loop}<br>${s.mode}</div>
       </div>
-      ${profiles.length>1?`<button class="p-del" onclick="event.stopPropagation();deleteProfile(${i})">×</button>`:''}
-      <button class="p-pub" onclick="event.stopPropagation();publishProfile(${i})" title="${isCloud?'Re-sync':'Publish to cloud'}">${isCloud?'✓☁':'☁'}</button>`;
+      <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;flex-shrink:0;gap:4px;">
+        ${profiles.length>1?`<button class="p-del" onclick="event.stopPropagation();deleteProfile(${i})">×</button>`:'<span></span>'}
+        <button class="p-pub-btn${isCloud?' published':''}" id="pub-btn-${i}" onclick="event.stopPropagation();publishProfile(${i})">${pubLabel}</button>
+      </div>`;
     c.onclick = () => switchProfile(i);
     el.appendChild(c);
   });
@@ -695,6 +700,21 @@ function switchProfile(i) {
   activeIdx = i;
   applyConfig(profiles[i]);
   renderProfiles();
+}
+
+function startRename(i) {
+  const nameEl = document.getElementById(`p-name-${i}`);
+  if (!nameEl) return;
+  const old = profiles[i].name;
+  const inp = document.createElement('input');
+  inp.value = old;
+  inp.style.cssText = `font-family:var(--px);font-size:8px;letter-spacing:1px;background:transparent;color:inherit;border:none;border-bottom:1px solid currentColor;padding:0;width:100%;box-sizing:border-box;outline:none;`;
+  inp.onclick = e => e.stopPropagation();
+  inp.onblur = () => { const v = inp.value.trim()||old; profiles[i].name=v; saveProfiles(); renderProfiles(); };
+  inp.onkeydown = e => { if(e.key==='Enter') inp.blur(); if(e.key==='Escape'){inp.value=old;inp.blur();} };
+  nameEl.innerHTML = '';
+  nameEl.appendChild(inp);
+  inp.focus(); inp.select();
 }
 
 function saveCurrentProfile() {
@@ -1903,6 +1923,8 @@ async function fetchCloudProfiles() {
 }
 
 async function publishProfile(i) {
+  const btn = document.getElementById(`pub-btn-${i}`);
+  if (btn) { btn.textContent='PUBLISHING...'; btn.disabled=true; btn.classList.remove('published'); }
   saveCurrentProfile();
   const p = profiles[i];
   if (!p.cloudId) p.cloudId = crypto.randomUUID();
@@ -1912,13 +1934,20 @@ async function publishProfile(i) {
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ profile: {...p, id: p.cloudId}, ownerId: _userId }),
     });
-    if (!r.ok) { showToast('PUBLISH FAILED'); return; }
+    if (!r.ok) {
+      showToast('PUBLISH FAILED');
+      if (btn) { btn.textContent='PUBLISH'; btn.disabled=false; }
+      return;
+    }
     cloudProfiles = await r.json();
     saveProfiles();
     renderProfiles();
     renderCloudProfiles();
     showToast('PUBLISHED');
-  } catch { showToast('PUBLISH FAILED'); }
+  } catch {
+    showToast('PUBLISH FAILED');
+    if (btn) { btn.textContent='PUBLISH'; btn.disabled=false; }
+  }
 }
 
 async function unpublishProfile(cloudId) {
