@@ -908,10 +908,11 @@ function renderBuffList() {
     const enabled = row.enabled!==false;
     const kOpts = VALID_KEYS.map(k=>`<option value="${k}"${row.key===k?' selected':''}>${k.toUpperCase()}</option>`).join('');
     const div = document.createElement('div');
-    div.className = 'seq-row';
+    div.className = 'seq-row'; div.draggable = true; div._drag = i;
     div.style.borderLeftColor = COLORS[i % COLORS.length];
     div.style.opacity = enabled ? '1' : '0.4';
     div.innerHTML = `
+      <span class="drag-handle">⠿</span>
       <input type="checkbox" ${enabled?'checked':''} title="${enabled?'Disable':'Enable'}"
         onchange="toggleBuff(${i})" style="margin:0 4px;cursor:pointer;">
       <select class="seq-key-sel" onchange="buffRows[${i}].key=this.value;">${kOpts}</select>
@@ -936,6 +937,7 @@ function renderBuffList() {
         <span class="ms-sfx">min</span>
       </div>
       <button class="del-btn" onclick="removeBuffRow(${i})">×</button>`;
+    attachDrag(div, i, buffRows, renderBuffList);
     list.appendChild(div);
   });
 }
