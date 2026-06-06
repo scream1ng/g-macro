@@ -374,47 +374,10 @@ input[type=range]::-webkit-slider-thumb{
     <div class="sections-inner">
     <div class="sections-left">
 
-    <!-- 1. CORE SETTINGS -->
+    <!-- 1. MOVEMENT -->
     <div class="sec">
       <div class="sec-hdr">
-        <span class="sec-title">⚙ 1. CORE SETTINGS</span>
-      </div>
-      <div class="sec-body">
-        <div class="f-grid" style="grid-template-columns:155px 1fr;">
-          <div>
-            <label class="f-lbl">TRIGGER BUTTON</label>
-            <div class="sel-w" style="width:100%;">
-              <select id="triggerButton" style="width:100%;">
-                <option value="1">1 — Left Click</option>
-                <option value="2">2 — Right Click</option>
-                <option value="3">3 — Middle</option>
-                <option value="4">4 — Side Back</option>
-                <option value="5">5 — Side Fwd</option>
-                <option value="6">6</option><option value="7">7</option>
-                <option value="8">8</option><option value="9" selected>9</option>
-                <option value="10">10</option><option value="11">11</option>
-              </select>
-              <span class="sel-arr">▼</span>
-            </div>
-            <div class="f-hint">Key that starts<br>the macro.</div>
-          </div>
-          <div>
-            <label class="f-lbl">HUMANIZATION (JITTER)</label>
-            <div class="sl-wrap">
-              <span class="sl-val" id="jitterVal">15%</span>
-              <input type="range" id="jitterPct" min="0" max="50" value="15"
-                oninput="document.getElementById('jitterVal').textContent=this.value+'%'">
-            </div>
-            <div class="f-hint">Adds random delay<br>between actions.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. MOVEMENT -->
-    <div class="sec">
-      <div class="sec-hdr">
-        <span class="sec-title">✂ 2. MOVEMENT</span>
+        <span class="sec-title">✂ 1. MOVEMENT</span>
       </div>
       <div class="sec-body">
         <div class="move-grid">
@@ -545,7 +508,7 @@ input[type=range]::-webkit-slider-thumb{
     <!-- 4. TIMERS -->
     <div class="sec">
       <div class="sec-hdr">
-        <span class="sec-title">&#x23F2; 5. TIMERS (BUFFS / COOLDOWNS)</span>
+        <span class="sec-title">&#x23F2; 4. TIMERS (BUFFS / COOLDOWNS)</span>
       </div>
       <div class="sec-body" style="padding:8px;">
         <div id="buff-list"></div>
@@ -556,7 +519,44 @@ input[type=range]::-webkit-slider-thumb{
     </div><!-- /.sections-left -->
     <div class="sections-right">
 
-    <!-- 5. PREVIEW TIMELINE -->
+    <!-- BUTTON SETTING -->
+    <div class="sec">
+      <div class="sec-hdr">
+        <span class="sec-title">⚙ BUTTON SETTING</span>
+      </div>
+      <div class="sec-body">
+        <div class="f-grid" style="grid-template-columns:155px 1fr;">
+          <div>
+            <label class="f-lbl">TRIGGER BUTTON</label>
+            <div class="sel-w" style="width:100%;">
+              <select id="triggerButton" style="width:100%;">
+                <option value="1">1 — Left Click</option>
+                <option value="2">2 — Right Click</option>
+                <option value="3">3 — Middle</option>
+                <option value="4">4 — Side Back</option>
+                <option value="5">5 — Side Fwd</option>
+                <option value="6">6</option><option value="7">7</option>
+                <option value="8">8</option><option value="9" selected>9</option>
+                <option value="10">10</option><option value="11">11</option>
+              </select>
+              <span class="sel-arr">▼</span>
+            </div>
+            <div class="f-hint">Key that starts<br>the macro.</div>
+          </div>
+          <div>
+            <label class="f-lbl">HUMANIZATION (JITTER)</label>
+            <div class="sl-wrap">
+              <span class="sl-val" id="jitterVal">15%</span>
+              <input type="range" id="jitterPct" min="0" max="50" value="15"
+                oninput="document.getElementById('jitterVal').textContent=this.value+'%'">
+            </div>
+            <div class="f-hint">Adds random delay<br>between actions.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOOP PREVIEW -->
     <div class="sec">
       <div class="sec-hdr"><span class="sec-title">5. LOOP PREVIEW</span></div>
       <div class="sec-body" style="padding:8px 10px;">
