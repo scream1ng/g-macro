@@ -651,8 +651,10 @@ function msSkillMs(rows) {
 
 function loopMs(p) {
   const walkAvg = p.walk?.mode==='off' ? 0 : ((p.walk?.min||1500) + (p.walk?.max||2500)) / 2;
-  const seqCost = p.sequence?.mode==='during' ? 0 : seqMs(p.sequence?.rows);
-  const msCost  = p.mouseSkillsMode==='during'  ? 0 : msSkillMs(p.mouseSkills);
+  const sMs_    = seqMs(p.sequence?.rows);
+  const msMs_   = msSkillMs(p.mouseSkills||[]);
+  const seqCost = p.sequence?.mode==='during' ? Math.max(0, sMs_ - walkAvg) : sMs_;
+  const msCost  = p.mouseSkillsMode==='during'  ? Math.max(0, msMs_ - walkAvg) : msMs_;
   return Math.round(walkAvg + seqCost + msCost);
 }
 
@@ -1034,7 +1036,9 @@ function updateTimeline() {
   const wAvg  = cfg.walk.mode==='off' ? 0 : (cfg.walk.min + cfg.walk.max) / 2;
   const sMs   = seqMs(cfg.sequence.rows);
   const msMs  = cfg.mouseSkills.filter(r=>r.enabled!==false).reduce((s,r)=>s+(r.hold||500)+(r.delay||50),0);
-  const lMs   = Math.round(wAvg + (seqDuring?0:sMs) + (msDuring?0:msMs));
+  const seqOverflow = seqDuring ? Math.max(0, sMs - wAvg) : 0;
+  const msOverflow  = msDuring  ? Math.max(0, msMs - wAvg) : 0;
+  const lMs   = Math.round(wAvg + (seqDuring?seqOverflow:sMs) + (msDuring?msOverflow:msMs));
   const total = lMs || 1;
 
   // header
@@ -1051,6 +1055,8 @@ function updateTimeline() {
       if (!ms) return;
       segs.push({label: isKey?row.action.toUpperCase():(row.action==='wait'?'WAIT':row.action.replace('_',' ').toUpperCase()), ms, color:ACT_COLORS[i%ACT_COLORS.length], alpha:1});
     });
+  } else if (seqOverflow > 0) {
+    segs.push({label:'STAND STILL', ms:seqOverflow, color:ACT_COLORS[0], alpha:0.7});
   }
   if (!msDuring) {
     cfg.mouseSkills.forEach((row,i)=>{
