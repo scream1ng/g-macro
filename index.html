@@ -408,12 +408,8 @@ input[type=range]::-webkit-slider-thumb{
           <div id="move-kb-fields" style="display:contents;">
           <div>
             <label class="f-lbl">DURATION (MS)</label>
-            <div style="display:flex;align-items:center;gap:5px;">
-              <input type="number" id="walkMin" value="1500" min="100" step="100" style="width:68px;text-align:center;">
-              <span style="font-family:var(--px);font-size:8px;color:var(--text2);">-</span>
-              <input type="number" id="walkMax" value="2500" min="100" step="100" style="width:68px;text-align:center;">
-            </div>
-            <div class="f-hint">Movement duration range.</div>
+            <input type="number" id="walkDuration" value="2000" min="100" step="100" style="width:100%;">
+            <div class="f-hint">Movement duration.</div>
           </div>
           <div>
             <label class="f-lbl">DIRECTION CHANGE (MS)</label>
@@ -1333,8 +1329,8 @@ function getConfig() {
     jitterPct:     +document.getElementById('jitterPct').value,
     walk:{
       mode:            getMoveMode(),
-      min:             +document.getElementById('walkMin').value,
-      max:             +document.getElementById('walkMax').value,
+      min:             +document.getElementById('walkDuration').value,
+      max:             +document.getElementById('walkDuration').value,
       changeInterval:  +document.getElementById('walkChange').value,
       dirs:            {...dirState},
       weightCardinal:  +document.getElementById('weightCardinal').value,
@@ -1378,8 +1374,7 @@ function applyConfig(cfg) {
       if(oEl) oEl.checked = w.mode==='off';
       updateMoveMode();
     }
-    if (w.min!==undefined)              setVal('walkMin', w.min);
-    if (w.max!==undefined)              setVal('walkMax', w.max);
+    if (w.min!==undefined)              setVal('walkDuration', w.min);
     if (w.changeInterval!==undefined)   setVal('walkChange', w.changeInterval);
     if (w.weightCardinal!==undefined)   setVal('weightCardinal', w.weightCardinal);
     if (w.weightDiagonal!==undefined)   setVal('weightDiagonal', w.weightDiagonal);
