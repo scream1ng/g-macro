@@ -1,27 +1,6 @@
-const { put, get } = require('@vercel/blob');
+const { put, del, list } = require('@vercel/blob');
 
-const BLOB_PATH = 'gmacro-profiles.json';
-
-async function readProfiles() {
-  try {
-    const result = await get(BLOB_PATH, { access: 'private', useCache: false });
-    if (!result || result.statusCode !== 200) return [];
-    const text = await new Response(result.stream).text();
-    return JSON.parse(text);
-  } catch (e) {
-    console.error('readProfiles error:', e.message);
-    return [];
-  }
-}
-
-async function writeProfiles(profiles) {
-  await put(BLOB_PATH, JSON.stringify(profiles), {
-    access: 'private',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: 'application/json',
-  });
-}
+const PREFIX = 'profiles/';
 
 async function parseBody(req) {
   return new Promise((resolve) => {
@@ -41,7 +20,11 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method === 'GET') {
-    return res.status(200).json(await readProfiles());
+    const { blobs } = await list({ prefix: PREFIX });
+    const profiles = await Promise.all(
+      blobs.map(blob => fetch(blob.url).then(r => r.json()))
+    );
+    return res.status(200).json(profiles);
   }
 
   const body = await parseBody(req);
@@ -49,33 +32,37 @@ module.exports = async function handler(req, res) {
   if (req.method === 'POST') {
     const { profile, ownerId } = body;
     if (!profile || !ownerId) return res.status(400).json({ error: 'Missing fields' });
-    const all = await readProfiles();
-    const idx = all.findIndex(p => p.id === profile.id);
-    if (idx >= 0) {
-      if (all[idx].ownerId !== ownerId) return res.status(403).json({ error: 'Not owner' });
-      all[idx] = { ...profile, ownerId };
-    } else {
-      all.push({ ...profile, ownerId, publishedAt: Date.now() });
+
+    const { blobs } = await list({ prefix: `${PREFIX}${profile.id}.json` });
+    let publishedAt = Date.now();
+    if (blobs.length > 0) {
+      const existing = await fetch(blobs[0].url).then(r => r.json());
+      if (existing.ownerId !== ownerId) return res.status(403).json({ error: 'Not owner' });
+      publishedAt = existing.publishedAt ?? publishedAt;
     }
-    try {
-      await writeProfiles(all);
-    } catch (e) {
-      console.error('writeProfiles error:', e.message);
-      return res.status(500).json({ error: e.message });
-    }
-    return res.status(200).json(all);
+
+    const data = { ...profile, ownerId, publishedAt };
+    await put(`${PREFIX}${profile.id}.json`, JSON.stringify(data), {
+      access: 'public',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: 'application/json',
+    });
+    return res.status(200).json(data);
   }
 
   if (req.method === 'DELETE') {
     const { id, ownerId } = body;
     if (!id || !ownerId) return res.status(400).json({ error: 'Missing fields' });
-    const all = await readProfiles();
-    const idx = all.findIndex(p => p.id === id);
-    if (idx < 0) return res.status(404).json({ error: 'Not found' });
-    if (all[idx].ownerId !== ownerId) return res.status(403).json({ error: 'Not owner' });
-    all.splice(idx, 1);
-    await writeProfiles(all);
-    return res.status(200).json(all);
+
+    const { blobs } = await list({ prefix: `${PREFIX}${id}.json` });
+    if (blobs.length === 0) return res.status(404).json({ error: 'Not found' });
+
+    const existing = await fetch(blobs[0].url).then(r => r.json());
+    if (existing.ownerId !== ownerId) return res.status(403).json({ error: 'Not owner' });
+
+    await del(blobs[0].url);
+    return res.status(200).json({ ok: true });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
