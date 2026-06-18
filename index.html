@@ -406,10 +406,26 @@ input[type=range]::-webkit-slider-thumb{
           </div>
           <!-- keyboard+mouse fields — hidden when Off -->
           <div id="move-kb-fields" style="display:contents;">
-          <div>
-            <label class="f-lbl">DURATION (MS)</label>
-            <input type="number" id="walkDuration" value="2000" min="100" step="100" style="width:100%;">
-            <div class="f-hint">Movement duration.</div>
+          <div style="display:flex;flex-direction:column;gap:12px;width:160px;">
+            <div>
+              <label class="f-lbl">DURATION (S)</label>
+              <input type="number" id="walkDuration" value="2" min="0.5" step="0.5" style="width:100%;">
+              <div class="f-hint">Movement duration.</div>
+            </div>
+            <div id="walk-box-fields">
+              <label class="f-lbl">RANGE (S)</label>
+              <div style="display:flex;gap:8px;">
+                <div style="flex:1;">
+                  <div style="font-size:9px;color:var(--dim);margin-bottom:3px;">W/S</div>
+                  <input type="number" id="walkBoxV" value="5" min="0.5" step="0.5" style="width:100%;">
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:9px;color:var(--dim);margin-bottom:3px;">A/D</div>
+                  <input type="number" id="walkBoxH" value="5" min="0.5" step="0.5" style="width:100%;">
+                </div>
+              </div>
+              <div class="f-hint">N/S and E/W box size.</div>
+            </div>
           </div>
           <div>
             <label class="f-lbl">DIRECTION CHANGE (MS)</label>
@@ -417,21 +433,18 @@ input[type=range]::-webkit-slider-thumb{
             <div class="f-hint">How often to change<br>direction.</div>
           </div>
           <div>
-            <label class="f-lbl">DIRECTIONS</label>
-            <div class="dir-grid">
-              <button class="dir-btn active" id="dir-wa" onclick="toggleDir('wa')">WA</button>
-              <button class="dir-btn active" id="dir-w"  onclick="toggleDir('w')">W</button>
-              <button class="dir-btn active" id="dir-wd" onclick="toggleDir('wd')">WD</button>
-              <button class="dir-btn active" id="dir-a"  onclick="toggleDir('a')">A</button>
-              <div class="dir-center"></div>
-              <button class="dir-btn active" id="dir-d"  onclick="toggleDir('d')">D</button>
-              <button class="dir-btn active" id="dir-sa" onclick="toggleDir('sa')">SA</button>
-              <button class="dir-btn active" id="dir-s"  onclick="toggleDir('s')">S</button>
-              <button class="dir-btn active" id="dir-sd" onclick="toggleDir('sd')">SD</button>
+            <label class="f-lbl">WALK STYLE</label>
+            <div class="radio-grp">
+              <label class="r-row">
+                <input type="radio" name="walkStyle" id="ws-box" value="box" checked onchange="updateWalkStyle()">
+                <span class="r-lbl">Box</span>
+              </label>
+              <label class="r-row">
+                <input type="radio" name="walkStyle" id="ws-free" value="free" onchange="updateWalkStyle()">
+                <span class="r-lbl">Free</span>
+              </label>
             </div>
           </div>
-          <input type="hidden" id="weightCardinal" value="2">
-          <input type="hidden" id="weightDiagonal" value="1">
           </div><!-- /#move-kb-fields -->
         </div>
         <!-- Mouse move options -->
@@ -607,7 +620,7 @@ input[type=range]::-webkit-slider-thumb{
 <script>
 // ── CONSTANTS ──────────────────────────────────
 const VALID_KEYS = ['1','2','3','4','5','6','7','8','9','0',
-                    'q','e','r','t','y','u','i','o','p','[','v'];
+                    'q','e','r','t','y','u','i','o','p','[','v','space'];
 const MOUSE_BTNS = ['LMB','RMB','MMB'];
 const EVERY_OPTS  = [5,10,15,20,30,45,60,90,120,180,300];
 const OFFSET_OPTS = [0,1,2,3,5,10,15,20,30];
@@ -627,9 +640,8 @@ function mkProfile(name, icon) {
   return {
     name, icon: icon || '🌾',
     triggerButton:9, maxRuntime:0, maxLoops:0, jitterPct:15,
-    walk:{ mode:'keyboard', min:1500, max:2500, changeInterval:600,
-           dirs:{w:true,a:true,s:true,d:true,wa:true,wd:true,sa:true,sd:true},
-           weightCardinal:2, weightDiagonal:1,
+    walk:{ mode:'keyboard', min:2000, max:2000, changeInterval:600,
+           walkStyle:'box', boxV:5, boxH:5,
            mouseClickArea:40, mouseArrivalWait:1800, mouseClickCount:2 },
     mouse:{ enabled:false, recenter:false, area:50, screenW:2560, screenH:1440 },
     sequence:{ mode:'after', cooldown:500, rows:[] },
@@ -777,11 +789,6 @@ function updateSummary() {
 
 // ── HELPERS ──────────────────────────────────
 // ── DIRECTION ─────────────────────────────────
-const dirState = {w:true,a:true,s:true,d:true,wa:true,wd:true,sa:true,sd:true};
-function toggleDir(d) {
-  dirState[d] = !dirState[d];
-  document.getElementById('dir-'+d).classList.toggle('active', dirState[d]);
-}
 
 
 // ── MOVE MODE ─────────────────────────────────
@@ -791,7 +798,12 @@ function updateMoveMode() {
   const isMouse = mode === 'mouse';
   document.getElementById('move-kb-fields').style.display = isOff ? 'none' : 'contents';
   document.getElementById('mouse-move-opts').style.display = isMouse ? '' : 'none';
+  updateWalkStyle();
   updateTimeline();
+}
+function updateWalkStyle() {
+  const style = document.querySelector('input[name="walkStyle"]:checked')?.value || 'box';
+  document.getElementById('walk-box-fields').style.display = style === 'box' ? '' : 'none';
 }
 
 // ── MOUSE SKILL COLLAPSE ──────────────────────
@@ -803,15 +815,16 @@ function toggleMsPanel() {
 }
 
 // ── DRAG HELPER ───────────────────────────────
+let _draggingEl = null, _draggingArr = null;
 function attachDrag(el, idx, arr, renderFn) {
-  el.addEventListener('dragstart', () => { el._drag=idx; el.classList.add('dragging'); });
-  el.addEventListener('dragend',   () => { el.classList.remove('dragging'); renderFn(); });
+  el.addEventListener('dragstart', () => { el._drag=idx; el.classList.add('dragging'); _draggingEl=el; _draggingArr=arr; });
+  el.addEventListener('dragend',   () => { el.classList.remove('dragging'); _draggingEl=null; _draggingArr=null; renderFn(); });
   el.addEventListener('dragover',  e => { e.preventDefault(); el.classList.add('drag-over'); });
   el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
   el.addEventListener('drop', e => {
     e.preventDefault(); el.classList.remove('drag-over');
-    const from = document.querySelector('.seq-row.dragging')?._drag;
-    if (from != null && from !== idx) { arr.splice(idx,0,arr.splice(from,1)[0]); renderFn(); updateTimeline(); }
+    const from = _draggingEl?._drag;
+    if (from != null && from !== idx && _draggingArr === arr) { arr.splice(idx,0,arr.splice(from,1)[0]); renderFn(); updateTimeline(); }
   });
 }
 
@@ -1329,12 +1342,12 @@ function getConfig() {
     jitterPct:     +document.getElementById('jitterPct').value,
     walk:{
       mode:            getMoveMode(),
-      min:             +document.getElementById('walkDuration').value,
-      max:             +document.getElementById('walkDuration').value,
+      min:             +document.getElementById('walkDuration').value * 1000,
+      max:             +document.getElementById('walkDuration').value * 1000,
       changeInterval:  +document.getElementById('walkChange').value,
-      dirs:            {...dirState},
-      weightCardinal:  +document.getElementById('weightCardinal').value,
-      weightDiagonal:  +document.getElementById('weightDiagonal').value,
+      walkStyle:       document.querySelector('input[name="walkStyle"]:checked')?.value || 'box',
+      boxV:            +document.getElementById('walkBoxV').value,
+      boxH:            +document.getElementById('walkBoxH').value,
       mouseClickArea:  +document.getElementById('mouseClickArea').value,
       mouseArrivalWait:+document.getElementById('mouseArrivalWait').value,
       mouseClickCount: +document.getElementById('mouseClickCount').value,
@@ -1374,20 +1387,14 @@ function applyConfig(cfg) {
       if(oEl) oEl.checked = w.mode==='off';
       updateMoveMode();
     }
-    if (w.min!==undefined)              setVal('walkDuration', w.min);
+    if (w.min!==undefined)              setVal('walkDuration', w.min / 1000);
     if (w.changeInterval!==undefined)   setVal('walkChange', w.changeInterval);
-    if (w.weightCardinal!==undefined)   setVal('weightCardinal', w.weightCardinal);
-    if (w.weightDiagonal!==undefined)   setVal('weightDiagonal', w.weightDiagonal);
+    if (w.walkStyle) { const el=document.getElementById('ws-'+w.walkStyle); if(el){el.checked=true;} updateWalkStyle(); }
+    if (w.boxV!==undefined)             setVal('walkBoxV', w.boxV);
+    if (w.boxH!==undefined)             setVal('walkBoxH', w.boxH);
     if (w.mouseClickArea!==undefined)   setVal('mouseClickArea', w.mouseClickArea);
     if (w.mouseArrivalWait!==undefined) setVal('mouseArrivalWait', w.mouseArrivalWait);
     if (w.mouseClickCount!==undefined)  setVal('mouseClickCount', w.mouseClickCount);
-    if (w.dirs){
-      Object.assign(dirState,w.dirs);
-      Object.keys(dirState).forEach(k=>{
-        const b=document.getElementById('dir-'+k);
-        if(b) b.classList.toggle('active',dirState[k]);
-      });
-    }
   }
   if (cfg.mouse){
     if (cfg.mouse.area!==undefined)    setVal('mouseSkillArea', cfg.mouse.area);
@@ -1465,9 +1472,8 @@ function onFileLoad(e) {
 function parseLuaConfig(lua) {
   const cfg={
     triggerButton:9,maxRuntime:0,maxLoops:0,jitterPct:15,
-    walk:{mode:'keyboard',min:1500,max:2500,changeInterval:600,
-          dirs:{w:true,a:true,s:true,d:true,wa:true,wd:true,sa:true,sd:true},
-          weightCardinal:2,weightDiagonal:1,
+    walk:{mode:'keyboard',min:2000,max:2000,changeInterval:600,
+          walkStyle:'box',boxV:5,boxH:5,
           mouseClickArea:40,mouseArrivalWait:1800,mouseClickCount:2},
     mouse:{enabled:false,recenter:false,area:50,screenW:2560,screenH:1440},
     sequence:{mode:'after',cooldown:500,rows:[]},
@@ -1491,16 +1497,11 @@ function parseLuaConfig(lua) {
   if(num('mouseClickAreaPct')!==null) cfg.walk.mouseClickArea   = Math.round(num('mouseClickAreaPct')*100);
   if(num('mouseArrivalWait')!==null)  cfg.walk.mouseArrivalWait = num('mouseArrivalWait');
   if(num('mouseClickCount')!==null)   cfg.walk.mouseClickCount  = num('mouseClickCount');
-  const wMin=lua.match(/minDuration\s*=\s*(\d+)/);    if(wMin) cfg.walk.min=+wMin[1];
-  const wMax=lua.match(/maxDuration\s*=\s*(\d+)/);    if(wMax) cfg.walk.max=+wMax[1];
-  const wChg=lua.match(/changeInterval\s*=\s*(\d+)/); if(wChg) cfg.walk.changeInterval=+wChg[1];
-  const dirs={w:false,a:false,s:false,d:false,wa:false,wd:false,sa:false,sd:false};
-  const dRe=/keys=\{([^}]+)\}/g; let dm;
-  while((dm=dRe.exec(lua))!==null){
-    const k=dm[1].replace(/"/g,'').split(',').map(s=>s.trim()).join('');
-    if(dirs[k]!==undefined) dirs[k]=true;
-  }
-  if(Object.values(dirs).some(Boolean)) cfg.walk.dirs=dirs;
+  const wDur=lua.match(/duration\s*=\s*(\d+)/);         if(wDur) { cfg.walk.min=+wDur[1]; cfg.walk.max=+wDur[1]; }
+  const wChg=lua.match(/changeInterval\s*=\s*(\d+)/);   if(wChg) cfg.walk.changeInterval=+wChg[1];
+  const wFree=lua.match(/freeWalk\s*=\s*(true|false)/); if(wFree) cfg.walk.walkStyle=wFree[1]==='true'?'free':'box';
+  const wBoxV=lua.match(/boxV\s*=\s*(\d+)/);            if(wBoxV) cfg.walk.boxV=+wBoxV[1]/1000;
+  const wBoxH=lua.match(/boxH\s*=\s*(\d+)/);            if(wBoxH) cfg.walk.boxH=+wBoxH[1]/1000;
   const sBlock=lua.match(/^sequence\s*=\s*\{([\s\S]*?)\n\}/m);
   if(sBlock){
     const rRe=/\{action="([^"]+)"([^}]*)\}/g; let rm;
@@ -1525,9 +1526,9 @@ function parseLuaConfig(lua) {
   }
   const bBlock=lua.match(/^buffs\s*=\s*\{([\s\S]*?)\n\}/m);
   if(bBlock){
-    const rRe=/\{key="([^"]+)",\s*interval=(\d+),\s*preLockout=(\d+),\s*delay=(\d+)\}/g; let bm;
+    const rRe=/\{key="([^"]+)",\s*hold=(\d+),\s*interval=(\d+),\s*preLockout=(\d+),\s*delay=(\d+)\}/g; let bm;
     while((bm=rRe.exec(bBlock[1]))!==null)
-      cfg.buffs.push({key:bm[1],interval:+(+bm[2]/60000).toFixed(2),offset:0,preLockout:Math.round(+bm[3]/1000),postDelay:+bm[4],name:'Buff '+bm[1].toUpperCase()});
+      cfg.buffs.push({key:bm[1],hold:+bm[2],interval:+(+bm[3]/60000).toFixed(2),offset:0,preLockout:Math.round(+bm[4]/1000),postDelay:+bm[5],name:'Buff '+bm[1].toUpperCase()});
   }
   return cfg;
 }
@@ -1584,14 +1585,6 @@ function generateLua() {
   const cfg    = getConfig();
   const jitter = cfg.jitterPct/100;
   const lMs    = loopMs(cfg);
-  const dirMap = {w:['w'],a:['a'],s:['s'],d:['d'],wa:['w','a'],wd:['w','d'],sa:['s','a'],sd:['s','d']};
-  const cards  = ['w','a','s','d'];
-  const dirL=[];
-  Object.entries(dirMap).forEach(([k,keys])=>{
-    if(!cfg.walk.dirs[k]) return;
-    const w=cards.includes(k)?cfg.walk.weightCardinal:cfg.walk.weightDiagonal;
-    dirL.push(`    {keys={${keys.map(x=>`"${x}"`).join(',')}}, weight=${w}},`);
-  });
   const seqL=[];
   cfg.sequence.rows.forEach(row=>{
     if(row.enabled===false) return;
@@ -1609,7 +1602,7 @@ function generateLua() {
   const buffL=[];
   cfg.buffs.forEach(b=>{
     if(b.enabled===false) return;
-    buffL.push(`    {key="${b.key}", interval=${Math.round((b.interval||5)*60*1000)}, preLockout=${Math.round((b.preLockout||2)*1000)}, delay=${b.postDelay||500}},`);
+    buffL.push(`    {key="${b.key}", hold=${b.hold||100}, interval=${Math.round((b.interval||5)*60*1000)}, preLockout=${Math.round((b.preLockout||2)*1000)}, delay=${b.postDelay||500}},`);
   });
   const msL=[];
   cfg.mouseSkills.forEach(r=>{
@@ -1650,14 +1643,12 @@ config = {
     mouseClickCount    = ${cfg.walk.mouseClickCount},
 }
 
-walkDirections = {
-${dirL.join('\n')}
-}
-
 walkConfig = {
-    minDuration    = ${cfg.walk.min},
-    maxDuration    = ${cfg.walk.max},
+    duration       = ${cfg.walk.min},
     changeInterval = ${cfg.walk.changeInterval},
+    freeWalk       = ${cfg.walk.walkStyle==='free'},
+    boxV           = ${(cfg.walk.boxV||5)*1000},
+    boxH           = ${(cfg.walk.boxH||5)*1000},
 }
 
 -- walkSkills: fire DURING walk on per-skill interval, no movement interrupt
@@ -1688,6 +1679,7 @@ state = {
     running=false, startTime=0, loopCount=0,
     lastSeqTime=0, lastMouseSkillTime=0, lastSharedRunTime=0,
     buffNext={}, walkSkillNext={},
+    walkX=0, walkY=0,
 }
 
 function Timestamp() return string.format("[%.1fs]",(GetRunningTime()-state.startTime)/1000) end
@@ -1695,7 +1687,7 @@ function Log(fmt,...) OutputLogMessage(Timestamp().." "..string.format(fmt,...).
 function Jitter(ms) local j=math.floor(ms*config.jitter); if j<1 then return ms end; return ms+math.random(-j,j) end
 
 function ReleaseAll()
-    for _,k in ipairs({"w","a","s","d","q","e","r","t","y","u","i","o","p","[","1","2","3","4","5","6","7","8","9","0"}) do
+    for _,k in ipairs({"w","a","s","d","q","e","r","t","y","u","i","o","p","[","1","2","3","4","5","6","7","8","9","0","space","v"}) do
         ReleaseKey(k)
     end
 end
@@ -1777,7 +1769,7 @@ function FireDueBuffs()
     for i,b in ipairs(buffs) do
         if now>=state.buffNext[i] then
             Log("Buff [%s]",b.key)
-            if not TapKey(b.key) then return false end
+            if not TapKey(b.key, b.hold) then return false end
             state.buffNext[i]=GetRunningTime()+b.interval
             if b.delay>0 then if not SleepChecked(b.delay) then return false end end
         end
@@ -1836,23 +1828,14 @@ function RunMouseSkills()
     return true
 end
 
-function PickDirection()
-    local total=0
-    for _,d in ipairs(walkDirections) do total=total+(d.weight or 1) end
-    local roll=math.random()*total; local cum=0
-    for _,d in ipairs(walkDirections) do
-        cum=cum+(d.weight or 1); if roll<=cum then return d.keys end
-    end
-    return walkDirections[1].keys
-end
 function PressDir(keys)   for _,k in ipairs(keys) do PressKey(k)   end end
 function ReleaseDir(keys) for _,k in ipairs(keys) do ReleaseKey(k) end end
 
-function DoWalkKeyboard()
-    local total=Jitter(math.random(walkConfig.minDuration,walkConfig.maxDuration))
-    local elapsed=0; local cur=PickDirection()
-    Log("Walk %dms %s",total,table.concat(cur,"+"))
-    PressDir(cur)
+function DoWalkFree()
+    local dirs={"w","s","a","d"}
+    local total=Jitter(walkConfig.duration); local elapsed=0
+    local cur={dirs[math.random(4)]}
+    Log("Walk %dms %s",total,cur[1]); PressDir(cur)
     while elapsed<total do
         local seg=math.min(walkConfig.changeInterval,total-elapsed)
         local t0=GetRunningTime()
@@ -1866,11 +1849,54 @@ function DoWalkKeyboard()
         end
         elapsed=elapsed+seg
         if elapsed<total then
-            ReleaseDir(cur); cur=PickDirection()
-            Log("  dir->%s",table.concat(cur,"+")); PressDir(cur)
+            ReleaseDir(cur); cur={dirs[math.random(4)]}
+            Log("  dir->%s",cur[1]); PressDir(cur)
         end
     end
     ReleaseDir(cur); return true
+end
+
+function DoWalkKeyboard()
+    if walkConfig.freeWalk then return DoWalkFree() end
+    local halfH=walkConfig.boxH/2; local halfV=walkConfig.boxV/2
+
+    local function pickDir()
+        local cands={}
+        if state.walkY>-halfV then table.insert(cands,{keys={"w"},axis="y",sign=-1}) end
+        if state.walkY< halfV then table.insert(cands,{keys={"s"},axis="y",sign= 1}) end
+        if state.walkX>-halfH then table.insert(cands,{keys={"a"},axis="x",sign=-1}) end
+        if state.walkX< halfH then table.insert(cands,{keys={"d"},axis="x",sign= 1}) end
+        if #cands==0 then state.walkX=0; state.walkY=0; return {keys={"w"},axis="y",sign=-1} end
+        return cands[math.random(#cands)]
+    end
+
+    local total=Jitter(walkConfig.duration); local elapsed=0
+    local cur=pickDir()
+    Log("Walk %dms %s",total,table.concat(cur.keys,"+"))
+    PressDir(cur.keys)
+    while elapsed<total do
+        local room
+        if cur.axis=="x" then room=cur.sign>0 and (halfH-state.walkX) or (halfH+state.walkX)
+        else                   room=cur.sign>0 and (halfV-state.walkY) or (halfV+state.walkY) end
+        local seg=math.min(walkConfig.changeInterval,total-elapsed,math.max(room,25))
+        local t0=GetRunningTime()
+        while GetRunningTime()-t0<seg do
+            if CheckStop() then ReleaseDir(cur.keys); return false end
+            if not FireDueBuffs() then ReleaseDir(cur.keys); return false end
+            if not FireDueWalkSkills() then ReleaseDir(cur.keys); return false end
+            if config.sequenceDuringWalk then if not RunSequence() then ReleaseDir(cur.keys); return false end end
+            if config.mouseSkillsDuringWalk then if not RunMouseSkills() then ReleaseDir(cur.keys); return false end end
+            Sleep(25)
+        end
+        if cur.axis=="x" then state.walkX=math.max(-halfH,math.min(halfH,state.walkX+cur.sign*seg))
+        else                   state.walkY=math.max(-halfV,math.min(halfV,state.walkY+cur.sign*seg)) end
+        elapsed=elapsed+seg
+        if elapsed<total then
+            ReleaseDir(cur.keys); cur=pickDir()
+            Log("  dir->%s",table.concat(cur.keys,"+")); PressDir(cur.keys)
+        end
+    end
+    ReleaseDir(cur.keys); return true
 end
 
 function DoWalkMouse()
@@ -1944,7 +1970,9 @@ async function publishProfile(i) {
       if (btn) { btn.textContent='PUBLISH'; btn.disabled=false; }
       return;
     }
-    cloudProfiles = await r.json();
+    const saved = await r.json();
+    const ci = cloudProfiles.findIndex(cp => cp.id === saved.id);
+    if (ci >= 0) cloudProfiles[ci] = saved; else cloudProfiles.push(saved);
     saveProfiles();
     renderProfiles();
     renderCloudProfiles();
@@ -1963,7 +1991,8 @@ async function unpublishProfile(cloudId) {
       body: JSON.stringify({ id: cloudId, ownerId: _userId }),
     });
     if (!r.ok) { showToast('FAILED'); return; }
-    cloudProfiles = await r.json();
+    await r.json();
+    cloudProfiles = cloudProfiles.filter(cp => cp.id !== cloudId);
     profiles.forEach(p => { if (p.cloudId === cloudId) delete p.cloudId; });
     saveProfiles();
     renderProfiles();
