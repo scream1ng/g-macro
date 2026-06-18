@@ -1546,7 +1546,7 @@ config = {
 
 walkConfig = {
     duration       = ${cfg.walk.min},
-    changeInterval = ${cfg.walk.changeInterval},
+    changeInterval = ${Math.max(100, cfg.walk.changeInterval || 600)},
     freeWalk       = ${cfg.walk.walkStyle==='free'},
     boxV           = ${(cfg.walk.boxV||3)*1000},
     boxH           = ${(cfg.walk.boxH||3)*1000},
@@ -1738,7 +1738,7 @@ function DoWalkFree()
     local cur={dirs[math.random(4)]}
     Log("Walk %dms %s",total,cur[1]); PressDir(cur)
     while elapsed<total do
-        local seg=math.min(walkConfig.changeInterval,total-elapsed)
+        local seg=math.max(25,math.min(walkConfig.changeInterval,total-elapsed))
         local t0=GetRunningTime()
         while GetRunningTime()-t0<seg do
             if CheckStop() then ReleaseDir(cur); return false end
@@ -1777,7 +1777,7 @@ function DoWalkKeyboard()
         local room
         if cur.axis=="x" then room=cur.sign>0 and (halfH-state.walkX) or (halfH+state.walkX)
         else                   room=cur.sign>0 and (halfV-state.walkY) or (halfV+state.walkY) end
-        local seg=math.min(walkConfig.changeInterval,total-elapsed,math.max(room,25))
+        local seg=math.max(25,math.min(walkConfig.changeInterval,total-elapsed,math.max(room,25)))
         local t0=GetRunningTime()
         while GetRunningTime()-t0<seg do
             if CheckStop() then ReleaseDir(cur.keys); return false end
